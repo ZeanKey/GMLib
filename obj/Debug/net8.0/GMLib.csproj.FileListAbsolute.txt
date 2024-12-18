@@ -23,3 +23,4 @@
 /Users/zean/Projects/UNDERTALE-Maker/GMLib/obj/Debug/net8.0/refint/GMLib.dll
 /Users/zean/Projects/UNDERTALE-Maker/GMLib/obj/Debug/net8.0/GMLib.pdb
 /Users/zean/Projects/UNDERTALE-Maker/GMLib/obj/Debug/net8.0/ref/GMLib.dll
+/Users/zean/Projects/UNDERTALE-Maker/GMLib/obj/Debug/net8.0/GMLib.sourcelink.json
