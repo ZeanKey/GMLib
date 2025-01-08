@@ -1,7 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-using System.Numerics;
-using System.Reflection;
-
 namespace GMLib;
 
 public static partial class GML
@@ -31,67 +27,6 @@ public static partial class GML
     }
 }
 
-public interface IHandleable<T> where T : IHandleable<T>
-{
-    public abstract static T? ResolveHandle(Handle<T> handle);
-}
-
-/// <summary>
-/// This class works like the weak reference to deal with GM type that can be disposed when needed.
-/// </summary>
-/// <typeparam name="T"></typeparam>
-public readonly struct Handle<T> where T : IHandleable<T>
-{
-    private readonly ushort _index = 0;
-
-    public Handle(ushort index)
-    {
-        _index = index;
-    }
-
-    /// <summary>
-    /// Compare the Handle ID with another Handle ID.
-    /// </summary>
-    /// <param name="obj"></param>
-    /// <returns>Only return true when the another object is Handle type and the intern 16-bit index is identical.</returns>
-    public override bool Equals([NotNullWhen(true)] object? obj)
-    {
-        if (obj is Handle<T> handle)
-        {
-            return handle._index == _index;
-        }
-        return false;
-    }
-    
-    /// <summary>
-    /// Return the intern index value of the Handle ID.
-    /// </summary>
-    /// <returns>The intern 16-bit index value.</returns>
-    public override int GetHashCode()
-    {
-        return _index;
-    }
-
-    public static bool operator ==(Handle<T> left, Handle<T> right)
-    {
-        return left.Equals(right);
-    }
-    
-    public static bool operator !=(Handle<T> left, Handle<T> right)
-    {
-        return !(left == right);
-    }
-
-    public static implicit operator T?(Handle<T> value)
-    {
-        if (typeof(T).GetMethod("ResolveHandle") is MethodInfo method && MethodInvoker.Create(method).Invoke(null, value) is T obj)
-        {
-            return obj;
-        }
-        return default;
-    }
-}
-
 /// <summary>
 /// The interface of template game object type.<br/>
 /// Literally, any class inherit from this interface can be managed be ObjectManager.
@@ -103,6 +38,7 @@ public interface IObject : IHandleable<IObject>
         GML.ObjectManager.TryGetInstance(handle, out IObject? value);
         return value;
     }
+    
     public class TimerAlarm
     {
         private int timer;
@@ -132,6 +68,7 @@ public interface IObject : IHandleable<IObject>
             Callback?.Invoke(caller);
         }
     }
+    
     public class TimerAlarmManager
     {
         private readonly IObject owner;
@@ -172,7 +109,9 @@ public interface IObject : IHandleable<IObject>
             }
         }
     }
+    
     public Handle<IObject>? ID { get; internal set; }
+    
     public bool InstanceExists();
     public bool InstanceDestroy();
     public abstract bool EventPerform(GML.Event type, params object?[] eventArgs);
@@ -239,7 +178,6 @@ public class LightObject : IObject
 {
     public delegate void EventCallback(LightObject sender, object?[] arguments);
 
-    Handle<IObject>? IObject.ID { get => ID; set => ID = value; }
     public Handle<IObject>? ID;
     public Dictionary<GML.Event, EventCallback> EventCallbacks;
 
@@ -263,6 +201,9 @@ public class LightObject : IObject
             EventCallbacks[eventname] = lightEventHandlers[eventname];
         }
     }
+
+#region IObject
+    Handle<IObject>? IObject.ID { get => ID; set => ID = value; }
 
     public static implicit operator Handle<IObject>?(LightObject gMObject)
     {
@@ -288,6 +229,8 @@ public class LightObject : IObject
     {
         return GML.ObjectManager.InstanceExists(ID);
     }
+
+#endregion
 }
 
 /*

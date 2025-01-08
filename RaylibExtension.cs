@@ -143,8 +143,8 @@ unsafe public static class RaylibExtension
         // Check if texture is valid
         if (texture.Id > 0)
         {
-            float width = (float)texture.Width;
-            float height = (float)texture.Height;
+            float width = (float)texture.Width * MathF.Sign(dest.Width);
+            float height = (float)texture.Height * MathF.Sign(dest.Height);
 
             bool flipX = false;
 

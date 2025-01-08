@@ -11,7 +11,7 @@ public static partial class GML
     /// 
     /// </summary>
     /// <param name="font"></param>
-    public static void draw_set_font(FontAsset font)
+    public static void draw_set_font(Asset.Font font)
     {
         GraphicManager.Font = font;
     }
@@ -38,7 +38,7 @@ public static partial class GML
     /// 
     /// </summary>
     /// <returns></returns>
-    public static FontAsset draw_get_font()
+    public static Asset.Font draw_get_font()
     {
         return GraphicManager.Font;
     }
