@@ -87,7 +87,7 @@ public class Instance : DynamicObject, IObject
 #region IObject
     Handle<IObject>? IObject.ID { get => ID; set => ID = value; }
 
-    bool IObject.EventPerform(GML.Event type, params object?[] eventArgs)
+    bool IObject.EventPerform(GML.EventType type, params object?[] eventArgs)
     {
         return ObjectIndex.EventPerform(this, this, type, eventArgs);
     }
@@ -115,7 +115,7 @@ public partial class Asset
     /// <summary>
     /// 
     /// </summary>
-    [AssetClassOf(Type.Object)]
+    [AssetClassOf(AssetType.Object)]
     public sealed class Object : IHandleable<Object>
     {
         public delegate void Event(Instance sender, EventArguments args);
@@ -146,7 +146,7 @@ public partial class Asset
         }
 #endregion
 
-        public Dictionary<GML.Event, Event> EventCallbacks;
+        public Dictionary<GML.EventType, Event> EventCallbacks;
         public Object? Parent;
         public HashSet<Object> Children;
 
@@ -163,7 +163,7 @@ public partial class Asset
             parent?.Children.Add(this);
             Children = [];
         }
-        public Object(Object? parent, IDictionary<GML.Event, Event> eventHandlers)
+        public Object(Object? parent, IDictionary<GML.EventType, Event> eventHandlers)
         {
             EventCallbacks = [];
             foreach (var eventname in eventHandlers.Keys)
@@ -183,11 +183,11 @@ public partial class Asset
         /// <param name="type"></param>
         /// <param name="eventArgs"></param>
         /// <returns></returns>
-        public bool EventPerform(Instance paramSelf, Instance paramOther, GML.Event type, params object?[] eventArgs)
+        public bool EventPerform(Instance paramSelf, Instance paramOther, GML.EventType type, params object?[] eventArgs)
         {
             if (EventCallbacks.TryGetValue(type, out var eventHandler))
             {
-                if (type == GML.Event.Alarm)
+                if (type == GML.EventType.Alarm)
                 {
                     eventHandler.Invoke(paramSelf, new AlarmEventArguments(paramOther, (int)eventArgs[0]!));
                     return true;

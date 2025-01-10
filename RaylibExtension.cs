@@ -1,9 +1,11 @@
+#define SUPPORT_FILEFORMAT_TTF
+
 using System;
 using System.Numerics;
 
 namespace GMLib;
 
-unsafe public static class RaylibExtension
+public static unsafe class RaylibExtension
 {
     const float DEG2RAD = MathF.PI / 180f;
 
@@ -225,5 +227,59 @@ unsafe public static class RaylibExtension
             Rlgl.End();
             Rlgl.SetTexture(0);
         }
+    }
+    public static Font LoadFontFromMemory(string fileType, byte* fileData, int dataSize, int fontSize, int* codepoints, int codepointCount)
+    {
+        const int FONT_TTF_DEFAULT_CHARS_PADDING = 4;
+        var font = new Font();
+
+        var fileExtLower = fileType.ToLower();
+
+        font.BaseSize = fontSize;
+        font.GlyphCount = (codepointCount > 0) ? codepointCount : 95;
+        font.GlyphPadding = 0;
+
+#if SUPPORT_FILEFORMAT_TTF
+        if (fileExtLower is ".ttf" or ".otf")
+        {
+            font.Glyphs = Raylib.LoadFontData(fileData, dataSize, font.BaseSize, codepoints, font.GlyphCount, FontType.Default);
+        }
+        else
+#endif
+#if SUPPORT_FILEFORMAT_BDF
+        if (TextIsEqual(fileExtLower, ".bdf"))
+        {
+            font.glyphs = LoadFontDataBDF(fileData, dataSize, codepoints, font.glyphCount, &font.baseSize);
+        }
+        else
+#endif
+        {
+            font.Glyphs = null;
+        }
+
+#if SUPPORT_FILEFORMAT_TTF || SUPPORT_FILEFORMAT_BDF
+        if (font.Glyphs is not null)
+        {
+            font.GlyphPadding = FONT_TTF_DEFAULT_CHARS_PADDING;
+
+            Image atlas =
+ Raylib.GenImageFontAtlas(font.Glyphs, &font.Recs, font.GlyphCount, font.BaseSize, font.GlyphPadding, 0);
+            font.Texture = Raylib.LoadTextureFromImage(atlas);
+
+            // Update glyphs[i].image to use alpha, required to be used on ImageDrawText()
+            for (int i = 0; i < font.GlyphCount; i++)
+            {
+                Raylib.UnloadImage(font.Glyphs![i].Image);
+                font.Glyphs[i].Image = Raylib.ImageFromImage(atlas, font.Recs[i]);
+            }
+
+            Raylib.UnloadImage(atlas);
+        }
+        else font = Raylib.GetFontDefault();
+#else
+        font = GetFontDefault();
+#endif
+
+        return font;
     }
 }

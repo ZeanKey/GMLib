@@ -119,8 +119,8 @@ public static partial class GML
 
 }
 
- /// <summary>
-/// The honrizontal alignment property.
+/// <summary>
+/// The horizontal alignment property.
 /// </summary>
 public enum FontHAlignment
 {
@@ -140,45 +140,29 @@ public enum FontVAlignment
 /// </summary>
 /// <param name="halign"></param>
 /// <param name="valign"></param>
-public struct FontAlignment
+public struct FontAlignment(FontHAlignment halign, FontVAlignment valign)
 {
     public static readonly FontAlignment Default = new(FontHAlignment.Left, FontVAlignment.Top);
-    public FontHAlignment HAlignment;
-    public FontVAlignment VAlignment;
-
-    public FontAlignment(FontHAlignment halign, FontVAlignment valign)
-    {
-        HAlignment = halign;
-        VAlignment = valign;
-    }
+    public FontHAlignment HAlignment = halign;
+    public FontVAlignment VAlignment = valign;
 
     public static explicit operator Vector2(FontAlignment align)
     {
-        Vector2 result = Vector2.Zero;
-        switch (align.HAlignment)
+        var result = Vector2.Zero;
+        result.X = align.HAlignment switch
         {
-            case FontHAlignment.Left:
-            result.X = 0f;
-            break;
-            case FontHAlignment.Center:
-            result.X = 0.5f;
-            break;
-            case FontHAlignment.Right:
-            result.X = 1f;
-            break;
-        }
-        switch (align.VAlignment)
+            FontHAlignment.Left => 0f,
+            FontHAlignment.Center => 0.5f,
+            FontHAlignment.Right => 1f,
+            _ => result.X
+        };
+        result.Y = align.VAlignment switch
         {
-            case FontVAlignment.Top:
-            result.X = 0f;
-            break;
-            case FontVAlignment.Middle:
-            result.X = 0.5f;
-            break;
-            case FontVAlignment.Bottom:
-            result.X = 1f;
-            break;
-        }
+            FontVAlignment.Top => 0f,
+            FontVAlignment.Middle => 0.5f,
+            FontVAlignment.Bottom => 1f,
+            _ => result.Y
+        };
         return result;
     }
 }
@@ -186,62 +170,36 @@ public struct FontAlignment
 /// <summary>
 /// 
 /// </summary>
-public struct Transform2D
+public struct Transform2D(Vector2 position, Vector2 scale, float rotation)
 {
-    public Vector2 Position;
-    public Vector2 Scale;
-    public float Rotation;
-    public Transform2D(Vector2 position, Vector2 scale, float rotation)
-    {
-        Position = position;
-        Scale = scale;
-        Rotation = rotation;
-    }
+    public Vector2 Position = position;
+    public Vector2 Scale = scale;
+    public float Rotation = rotation;
 }
 
 /// <summary>
 /// GameMaker Color type, doesn't contain alpha channel.
 /// When cast to Raylib color, it will read the environment's default rendering color from RenderingState class.
 /// </summary>
-public struct Color3B
+public struct Color3B(byte r, byte g, byte b)
 {
-    public byte R; 
-    public byte G;
-    public byte B;
-    public byte? A;
+    public readonly byte R = r; 
+    public readonly byte G = g;
+    public readonly byte B = b;
 
-    public Color3B(byte r, byte g, byte b)
+    public Color3B(Color color) : this(color.R, color.G, color.B)
     {
-        R = r;
-        G = g;
-        B = b;
-    }
-    public Color3B(byte r, byte g, byte b, byte a)
-    {
-        R = r;
-        G = g;
-        B = b;
-        A = a;
-    }
-    public Color3B(Color color)
-    {
-        R = color.R;
-        G = color.G;
-        B = color.B;
     }
 
-    public static implicit operator Color(Color3B color)
-    {
-        var alpha = color.A ?? GML.GraphicManager.Color.A;
-        return new Color(color.R, color.G, color.B, alpha);
-    }
+    public static implicit operator Color(Color3B color) =>
+        new Color(color.R, color.G, color.B, GML.GraphicManager.Color.A);
 }
 
 /// <summary>
 /// This static class works as a global GameMaker rendering state.
 /// Editing fields under this class will affect drawing effects after.
 /// </summary>
-public partial class GraphicManager
+public class GraphicManager
 {
     public FontAlignment Alignment { get; set; } = FontAlignment.Default;
     public FontHAlignment HAlignment
@@ -254,6 +212,18 @@ public partial class GraphicManager
         get => Alignment.VAlignment;
         set => Alignment = Alignment with { VAlignment = value };
     }
+    
     public Asset.Font Font { get; set; } = Asset.Font.Default;
+    
     public Color Color { get; set; } = Color.White;
+    public Color3B Colour
+    {
+        get => new(Color);
+        set => Color = value;
+    } // GameMaker style colour (RGB channels only)
+    public float Alpha
+    {
+        get => GML.GraphicManager.Color.A;
+        set => GML.GraphicManager.Color = GML.GraphicManager.Color with { A = (byte)(255 * value) };
+    } // GameMaker style alpha (A channel only)
 }

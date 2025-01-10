@@ -5,7 +5,7 @@ namespace GMLib;
 
 public static partial class GML
 {
-    public static AssetManager<Asset.Sprite> SpriteManager => AssetManager<Asset.Sprite>.DefaultManager;
+    public static AssetManager<Asset.Sprite> Sprite => AssetManager<Asset.Sprite>.Default;
     
     public static void DrawSpriteOf()
     {
@@ -56,12 +56,12 @@ public static partial class GML
     // TODO: DrawSpriteTiled
     public static void DrawSpriteTiled(Asset.Sprite sprite, int subimg, Vector2 position)
     {
-        
+        throw new NotImplementedException();
     }
 
     // TODO: DrawSpriteTiledExt
     public static void DrawSpriteTiledExt(Asset.Sprite sprite, int subimg, Vector2 position, Vector2 scale, Color colour)
     {
-        
+        throw new NotImplementedException();
     }
 }

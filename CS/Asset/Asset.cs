@@ -5,29 +5,21 @@ namespace GMLib;
 
 public static partial class GML
 {
-    public static AssetManager AssetManager = new();
+    public static AssetManager Asset = new();
     
     public static Handle<Asset> AssetGetIndex(string name)
     {
-        if (AssetManager.TryFindAssetHandle(name, out var handle))
-        {
-            return handle;
-        }
-        return default;
+        return Asset.TryFindAssetHandle(name, out var handle) ? handle : default;
     }
 
     public static Type AssetGetType(string name)
     {
-        if (AssetManager.TryFindAssetHandle(name, out var handle))
-        {
-            return handle.Prefix.ToType();
-        }
-        return typeof(Asset.Unknown);
+        return Asset.TryFindAssetHandle(name, out var handle) ? handle.Prefix.ToType() : typeof(Asset.Unknown);
     }
 
-    public static Handle<Asset>[] AssetGetIds(Asset.Type type)
+    public static Handle<Asset>[] AssetGetIds(AssetType assetType)
     {
-        return AssetManager[(byte)type].Handles;
+        return Asset[(byte)assetType].Handles;
     }
 }
 
@@ -35,40 +27,38 @@ public static partial class GML
 /// 
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
-internal class AssetClassOf : Attribute
+internal class AssetClassOf(AssetType assetType) : Attribute
 {
-    public Asset.Type Type { get; init; }
-    public AssetClassOf(Asset.Type type)
-    {
-        Type = type;
-    }
+    internal AssetType AssetType { get; init; } = assetType;
+}
+
+public enum AssetType : byte
+{
+    Unknown,
+    Object,
+    Sprite, 
+    Sound,
+    Room,
+    Tiles,
+    Path,
+    Script,
+    Font,
+    Timeline,
+    Shader,
+    AnimationCurve,
+    Sequence,
+    ParticleSystem
 }
 
 /// <summary>
 /// 
 /// </summary>
-/// <typeparam name="T"></typeparam>
 public abstract partial class Asset : IHandleable<Asset>
 {
-    public enum Type : byte
-    {
-        Unknown,
-        Object,
-        Sprite, 
-        Sound,
-        Room,
-        Tiles,
-        Path,
-        Script,
-        Font,
-        Timeline,
-        Shader,
-        AnimationCurve,
-        Sequence,
-        ParticleSystem
-    }
-
-    [AssetClassOf(Type.Unknown)]
+    /// <summary>
+    /// 
+    /// </summary>
+    [AssetClassOf(AssetType.Unknown)]
     public class Unknown
     {
         
@@ -76,14 +66,15 @@ public abstract partial class Asset : IHandleable<Asset>
 
     public static Asset? ResolveHandle(Handle<Asset> handle)
     {
-        throw new NotImplementedException();
+        GML.Asset.TryFindAsset(handle, out var result);
+        return result;
     }
 }
 
 public abstract partial class Asset
 {
-    internal readonly static Dictionary<byte, System.Type> AssetPrefixToTypeMap = [];
-    internal readonly static Dictionary<System.Type, byte> TypeToAssetPrefixMap = [];
+    internal static readonly Dictionary<byte, System.Type> AssetPrefixToTypeMap = [];
+    internal static readonly Dictionary<System.Type, byte> TypeToAssetPrefixMap = [];
     
     static Asset()
     {
@@ -91,35 +82,27 @@ public abstract partial class Asset
             .Where(p => Attribute.IsDefined(p, typeof(AssetClassOf)));
         foreach (var member in members)
         {
-            var value = (byte)(member.GetCustomAttribute(typeof(AssetClassOf))! as AssetClassOf)!.Type;
-            AssetPrefixToTypeMap.Add
-            (
-                value, member
-            );
-            TypeToAssetPrefixMap.Add
-            (
-                member, value
-            );
+            var value = (byte)(member.GetCustomAttribute(typeof(AssetClassOf))! as AssetClassOf)!.AssetType;
+            AssetPrefixToTypeMap
+                .Add(value, member);
+            TypeToAssetPrefixMap
+                .Add(member, value);
         }
     }
 }
 
-public abstract partial class Asset
+public abstract partial class Asset(string name)
 {
-    public readonly string Name;
-    
-    public Asset(string name)
-    {
-        Name = name;
-    }
+    public readonly string Name = name;
 }
 
-public static class AssetExtension
+internal static class AssetExtension
 {
     internal static Type ToType(this byte type) => Asset.AssetPrefixToTypeMap[type];
-    internal static byte ToAssetPreifx(this Type type) => Asset.TypeToAssetPrefixMap[type];
+    internal static byte ToAssetPrefix(this Type type) => Asset.TypeToAssetPrefixMap[type];
 }
 
+#region Managed Asset * Abandoned
 /*
 /// <summary>
 /// 
@@ -165,6 +148,7 @@ public abstract class ManagedAsset : Asset, IHandleable<ManagedAsset>
     }
 }
 */
+#endregion
 
 /// <summary>
 /// 
@@ -219,47 +203,45 @@ public interface IAssetManager
 /// <summary>
 /// 
 /// </summary>
-/// <typeparam name="T"></typeparam>
-public class AssetManager<T> : IAssetManager where T : Asset, IHandleable<T>
+/// <typeparam name="TAsset"></typeparam>
+public sealed class AssetManager<TAsset> : IAssetManager where TAsset : Asset, IHandleable<TAsset>
 {
-    protected byte assetIndexCounter;
-    protected readonly Dictionary<Handle<T>, T> AssetHandleToResourceMap = [];
-    protected readonly Dictionary<string, Handle<T>> AssetNameToHandleMap = [];
+    private byte AssetIndexCounter;
+    private readonly Dictionary<Handle<TAsset>, TAsset> AssetHandleToResourceMap = []; // Get Asset object from Asset Handle
+    private readonly Dictionary<string, Handle<TAsset>> AssetNameToHandleMap = []; // Get Asset Handle from Asset name
 
-    public int Counter => assetIndexCounter;
-    public static readonly byte Prefix = typeof(T).ToAssetPreifx();
+    public int Counter => AssetIndexCounter;
+    public static readonly byte Prefix = typeof(TAsset).ToAssetPrefix();
 
-    internal static AssetManager<T> DefaultManager = new();
+    public static AssetManager<TAsset> Default { get; internal set; } = new();
 
     static AssetManager()
     {
-        AssetManager.PrefixToManagerMap[Prefix] = DefaultManager;
+        AssetManager.PrefixToManagerMap[Prefix] = Default;
     }
 
     /// <summary>
     /// 
     /// </summary>
     /// <returns></returns>
-    protected virtual Handle<T> NextHandle()
-    {
-        return new Handle<T>(
-            (ushort)((Prefix << 8) + assetIndexCounter ++)
-        );
-    }
+    private Handle<TAsset> NextHandle() => 
+        new Handle<TAsset>((ushort)((Prefix << 8) + AssetIndexCounter ++));
     
     /// <summary>
     /// 
     /// </summary>
     /// <param name="asset"></param>
     /// <returns></returns>
-    public virtual Handle<T>? Register(T asset)
+    public Handle<TAsset>? Register(TAsset asset)
     {
         if (AssetHandleToResourceMap.ContainsValue(asset))
             return null;
 
-        Handle<T> handle = NextHandle();
-        AssetHandleToResourceMap.Add(handle, asset);
-        AssetNameToHandleMap.Add(asset.Name, handle);
+        var handle = NextHandle();
+        AssetHandleToResourceMap
+            .Add(handle, asset);
+        AssetNameToHandleMap
+            .Add(asset.Name, handle);
 
         return handle;
     }
@@ -269,9 +251,9 @@ public class AssetManager<T> : IAssetManager where T : Asset, IHandleable<T>
     /// </summary>
     /// <param name="asset"></param>
     /// <returns></returns>
-    public virtual bool Override(T asset)
+    public bool Override(TAsset asset)
     {
-        if (!AssetNameToHandleMap.TryGetValue(asset.Name, out Handle<T> handle))
+        if (!AssetNameToHandleMap.TryGetValue(asset.Name, out var handle))
             return false;
 
         AssetHandleToResourceMap[handle] = asset;
@@ -283,7 +265,7 @@ public class AssetManager<T> : IAssetManager where T : Asset, IHandleable<T>
     /// </summary>
     /// <param name="handle"></param>
     /// <returns></returns>
-    public virtual bool Remove(Handle<T> handle)
+    public bool Remove(Handle<TAsset> handle)
     {
         return AssetHandleToResourceMap.Remove(handle);
     }
@@ -293,7 +275,7 @@ public class AssetManager<T> : IAssetManager where T : Asset, IHandleable<T>
     /// </summary>
     /// <param name="handle"></param>
     /// <returns></returns>
-    public virtual bool Exists(Handle<T> handle)
+    public bool Exists(Handle<TAsset> handle)
     {
         return AssetHandleToResourceMap.ContainsKey(handle);
     }
@@ -304,7 +286,7 @@ public class AssetManager<T> : IAssetManager where T : Asset, IHandleable<T>
     /// <param name="handle"></param>
     /// <param name="asset"></param>
     /// <returns></returns>
-    public virtual bool TryFindAsset(Handle<T> handle, out T? asset)
+    public bool TryFindAsset(Handle<TAsset> handle, out TAsset? asset)
     {
         return AssetHandleToResourceMap.TryGetValue(handle, out asset);
     }
@@ -315,10 +297,10 @@ public class AssetManager<T> : IAssetManager where T : Asset, IHandleable<T>
     /// <param name="name"></param>
     /// <param name="asset"></param>
     /// <returns></returns>
-    public virtual bool TryFindAsset(string name, out T? asset)
+    public bool TryFindAsset(string name, out TAsset? asset)
     {
         asset = null;
-        return TryFindAssetHandle(name, out Handle<T> handle) && AssetHandleToResourceMap.TryGetValue(handle, out asset);
+        return TryFindAssetHandle(name, out Handle<TAsset> handle) && AssetHandleToResourceMap.TryGetValue(handle, out asset);
     }
 
     /// <summary>
@@ -327,25 +309,25 @@ public class AssetManager<T> : IAssetManager where T : Asset, IHandleable<T>
     /// <param name="name"></param>
     /// <param name="handle"></param>
     /// <returns></returns>
-    public virtual bool TryFindAssetHandle(string name, out Handle<T> handle)
+    public bool TryFindAssetHandle(string name, out Handle<TAsset> handle)
     {
         return AssetNameToHandleMap.TryGetValue(name, out handle);
     }
 
 #region IAssetManager
     public Handle<Asset>[] Handles => AssetHandleToResourceMap.Keys
-        .Select<Handle<T>, Handle<Asset>>((handle) => new(handle)).ToArray();
+        .Select<Handle<TAsset>, Handle<Asset>>((handle) => new(handle)).ToArray();
 
     public bool Remove(Handle<Asset> handle)
     {
         if (handle.Prefix != Prefix) return false;
-        return Remove(new Handle<T>(handle));
+        return Remove(new Handle<TAsset>(handle));
     }
 
     public bool Exists(Handle<Asset> handle)
     {
         if (handle.Prefix != Prefix) return false;
-        return Exists(new Handle<T>(handle));
+        return Exists(new Handle<TAsset>(handle));
     }
 
     public bool TryFindAsset(Handle<Asset> handle, out Asset? asset)
@@ -355,7 +337,7 @@ public class AssetManager<T> : IAssetManager where T : Asset, IHandleable<T>
             asset = null;
             return false;
         }
-        var result = TryFindAsset(new Handle<T>(handle), out var assetT);
+        var result = TryFindAsset(new Handle<TAsset>(handle), out var assetT);
         asset = assetT;
         return result;
     }
@@ -372,7 +354,7 @@ public class AssetManager<T> : IAssetManager where T : Asset, IHandleable<T>
 
     public bool TryFindAssetHandle(string name, out Handle<Asset> handle)
     {
-        if (TryFindAssetHandle(name, out Handle<T> handleT))
+        if (TryFindAssetHandle(name, out Handle<TAsset> handleT))
         {
             handle = new(handleT);
             return true;
@@ -386,9 +368,10 @@ public class AssetManager<T> : IAssetManager where T : Asset, IHandleable<T>
 /// <summary>
 /// 
 /// </summary>
-public class AssetManager : IAssetManager
+public sealed class AssetManager : IAssetManager
 {
-    public Handle<Asset>[] Handles { 
+    public Handle<Asset>[] Handles
+    { 
         get
         {
             List<Handle<Asset>> result = [];
@@ -400,7 +383,7 @@ public class AssetManager : IAssetManager
         }
     }
 
-    internal static Dictionary<byte, IAssetManager> PrefixToManagerMap = [];
+    internal static readonly Dictionary<byte, IAssetManager> PrefixToManagerMap = [];
     
     /// <summary>
     /// 
@@ -414,6 +397,7 @@ public class AssetManager : IAssetManager
     /// </summary>
     /// <param name="asset"></param>
     /// <returns></returns>
+    [Obsolete]
     public Handle<Asset>? Register(Asset asset)
     {
         throw new NotImplementedException();
