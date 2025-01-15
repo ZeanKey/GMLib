@@ -213,7 +213,7 @@ public class GraphicManager
         set => Alignment = Alignment with { VAlignment = value };
     }
     
-    public Asset.Font Font { get; set; } = Asset.Font.Default;
+    public Asset.Font Font { get; set; }
     
     public Color Color { get; set; } = Color.White;
     public Color3B Colour

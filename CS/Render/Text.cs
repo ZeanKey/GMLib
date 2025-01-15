@@ -152,12 +152,12 @@ public static partial class GML
     /// <param name="c4"></param>
     public static void DrawTextExtTransformedColour(Vector2 position, string text, float sep, float w, Vector2 scale, float angle, Color c1, Color c2, Color c3, Color c4)
     {
-        var font = GraphicManager.Font.Font;
+        var font = GraphicManager.Font;
         if (sep < 0)
             sep = 0;
         else
-            sep -= font.BaseSize * scale.Y;
+            sep -= font.Size * scale.Y;
         
-        DrawTextProExt(font, text, position, Vector2.Zero, angle, scale, (Vector2)GraphicManager.Alignment, sep, 0, c1, c2, c3, c4);
+        DrawTextProGeneral(font, text, position, Vector2.Zero, angle, scale, (Vector2)GraphicManager.Alignment, sep, 0, c1, c2, c3, c4);
     }
 }

@@ -31,7 +31,7 @@ public partial class Asset
 {
 
     [AssetClassOf(AssetType.Sprite)]
-    public class Sprite : Asset, IHandleable<Sprite>
+    public sealed class Sprite : Asset, IHandleable<Sprite>, IDisposable
     {   
         public class Frame(Texture2D texture, Vector2 position)
         {
@@ -44,7 +44,7 @@ public partial class Asset
         public int Number => Frames.Length;
         public float Speed { get; set; }
         public SpriteSpeedType SpeedType { get; set; }
-        public Vector2 Size { get; protected set; }
+        public Vector2 Size { get; private set; }
         public Vector2 Offset { get; set; }
         public Vector2 BBox => throw new NotImplementedException();
         public Texture2D Texture => throw new NotImplementedException();
@@ -124,5 +124,23 @@ public partial class Asset
             GML.Sprite.TryFindAsset(handle, out var sprite);
             return sprite;
         }
+        
+        #region Disposable
+        private bool _disposedValue;
+        ~Sprite() => Dispose(false);
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+        
+        private void Dispose(bool disposing)
+        {
+            if (_disposedValue) return;
+            // TODO
+            _disposedValue = true;
+        }
+        #endregion
     }
 }

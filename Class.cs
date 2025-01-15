@@ -21,6 +21,22 @@ public static partial class GML
     }
 }
 
+public readonly struct UVs
+{
+    public readonly int Left;
+    public readonly int Top;
+    public readonly int Right;
+    public readonly int Bottom;
+
+    public UVs(int left, int top, int right, int bottom)
+    {
+        Left = left;
+        Top = top;
+        Right = right;
+        Bottom = bottom;
+    }
+}
+
 #region Handle
 /// <summary>
 /// 
