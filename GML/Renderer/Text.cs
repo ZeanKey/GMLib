@@ -5,192 +5,94 @@ using static GMLib.RaylibExtension;
 
 namespace GMLib;
 
-public static partial class GML
+public partial class GMLNative
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="font"></param>
     public static void draw_set_font(Asset.Font font)
     {
-        GraphicManager.Font = font;
+        GML.GraphicManager.Font = font;
     }
     
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="halign"></param>
     public static void draw_set_halign(FontHAlignment halign)
     {
-        GraphicManager.HAlignment = halign;
+        GML.GraphicManager.HAlignment = halign;
     }
     
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="valign"></param>
     public static void draw_set_valign(FontVAlignment valign)
     {
-        GraphicManager.VAlignment = valign;
+        GML.GraphicManager.VAlignment = valign;
     }
     
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <returns></returns>
     public static Asset.Font draw_get_font()
     {
-        return GraphicManager.Font;
+        return GML.GraphicManager.Font;
     }
     
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <returns></returns>
     public static FontHAlignment draw_get_halign()
     {
-        return GraphicManager.HAlignment;
+        return GML.GraphicManager.HAlignment;
     }
     
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <returns></returns>
     public static FontVAlignment draw_get_valign()
     {
-        return GraphicManager.VAlignment;
+        return GML.GraphicManager.VAlignment;
     }
     
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="x"></param>
-    /// <param name="y"></param>
-    /// <param name="text"></param>
     public static void draw_text(float x, float y, string text)
     {
-        DrawText(new Vector2(x, y), text);
+        GML.DrawText(new Vector2(x, y), text);
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="x"></param>
-    /// <param name="y"></param>
-    /// <param name="text"></param>
-    /// <param name="sep"></param>
-    /// <param name="w"></param>
     public static void draw_text_ext(float x, float y, string text, float sep, float w)
     {
-        DrawTextExt(new Vector2(x, y), text, sep, w);
+        GML. DrawTextExt(new Vector2(x, y), text, sep, w);
     }
     
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="x"></param>
-    /// <param name="y"></param>
-    /// <param name="text"></param>
-    /// <param name="c1"></param>
-    /// <param name="c2"></param>
-    /// <param name="c3"></param>
-    /// <param name="c4"></param>
-    /// <param name="alpha"></param>
     public static void draw_text_colour(float x, float y, string text, Color3B c1, Color3B c2, Color3B c3, Color3B c4, float alpha)
     {
-        byte alphaub = (byte)((int)alpha * 255);
-        DrawTextColour
+        var alphaUByte = (byte)(alpha * 255);
+        GML.DrawTextColour
         (
             new Vector2(x, y), text,
-            new Color(c1.R, c1.G, c1.B, alphaub),
-            new Color(c2.R, c2.G, c2.B, alphaub),
-            new Color(c3.R, c3.G, c3.B, alphaub),
-            new Color(c4.R, c4.G, c4.B, alphaub)
+            new Color(c1.R, c1.G, c1.B, alphaUByte),
+            new Color(c2.R, c2.G, c2.B, alphaUByte),
+            new Color(c3.R, c3.G, c3.B, alphaUByte),
+            new Color(c4.R, c4.G, c4.B, alphaUByte)
         );
     }
     
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="x"></param>
-    /// <param name="y"></param>
-    /// <param name="text"></param>
-    /// <param name="xscale"></param>
-    /// <param name="yscale"></param>
-    /// <param name="angle"></param>
     public static void draw_text_transformed(float x, float y, string text, float xscale, float yscale, float angle)
     {
-        DrawTextTransformed(new Vector2(x, y), text, new Vector2(xscale, yscale), angle);
+        GML.DrawTextTransformed(new Vector2(x, y), text, new Vector2(xscale, yscale), angle);
     }
     
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="x"></param>
-    /// <param name="y"></param>
-    /// <param name="text"></param>
-    /// <param name="sep"></param>
-    /// <param name="w"></param>
-    /// <param name="c1"></param>
-    /// <param name="c2"></param>
-    /// <param name="c3"></param>
-    /// <param name="c4"></param>
-    /// <param name="alpha"></param>
     public static void draw_text_ext_colour(float x, float y, string text, float sep, float w, Color3B c1, Color3B c2, Color3B c3, Color3B c4, float alpha)
     {
-        byte alphaub = (byte)((int)alpha * 255);
-        DrawTextExtColour
+        var alphaUByte = (byte)(alpha * 255);
+        GML.DrawTextExtColour
         (
             new Vector2(x, y), text, sep, w,
-            new Color(c1.R, c1.G, c1.B, alphaub),
-            new Color(c2.R, c2.G, c2.B, alphaub),
-            new Color(c3.R, c3.G, c3.B, alphaub),
-            new Color(c4.R, c4.G, c4.B, alphaub)
+            new Color(c1.R, c1.G, c1.B, alphaUByte),
+            new Color(c2.R, c2.G, c2.B, alphaUByte),
+            new Color(c3.R, c3.G, c3.B, alphaUByte),
+            new Color(c4.R, c4.G, c4.B, alphaUByte)
         );
     }
     
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="x"></param>
-    /// <param name="y"></param>
-    /// <param name="text"></param>
-    /// <param name="sep"></param>
-    /// <param name="w"></param>
-    /// <param name="xscale"></param>
-    /// <param name="yscale"></param>
-    /// <param name="angle"></param>
     public static void draw_text_ext_transformed(float x, float y, string text, float sep, float w, float xscale, float yscale, float angle)
     {
-        DrawTextExtTransformed(new Vector2(x, y), text, sep, w, new Vector2(xscale, yscale), angle);
+        GML.DrawTextExtTransformed(new Vector2(x, y), text, sep, w, new Vector2(xscale, yscale), angle);
     }
     
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="x"></param>
-    /// <param name="y"></param>
-    /// <param name="text"></param>
-    /// <param name="sep"></param>
-    /// <param name="w"></param>
-    /// <param name="xscale"></param>
-    /// <param name="yscale"></param>
-    /// <param name="angle"></param>
-    /// <param name="c1"></param>
-    /// <param name="c2"></param>
-    /// <param name="c3"></param>
-    /// <param name="c4"></param>
-    /// <param name="alpha"></param>
     public static void draw_text_ext_transformed_colour(float x, float y, string text, float sep, float w, float xscale, float yscale, float angle, Color3B c1, Color3B c2, Color3B c3, Color3B c4, float alpha)
     {
-        byte alphaub = (byte)((int)alpha * 255);
-        DrawTextExtTransformedColour
+        var alphaUByte = (byte)(alpha * 255);
+        GML.DrawTextExtTransformedColour
         (
             new Vector2(x, y), text, sep, w, new Vector2(xscale, yscale), angle, 
-            new Color(c1.R, c1.G, c1.B, alphaub),
-            new Color(c2.R, c2.G, c2.B, alphaub),
-            new Color(c3.R, c3.G, c3.B, alphaub),
-            new Color(c4.R, c4.G, c4.B, alphaub)
+            new Color(c1.R, c1.G, c1.B, alphaUByte),
+            new Color(c2.R, c2.G, c2.B, alphaUByte),
+            new Color(c3.R, c3.G, c3.B, alphaUByte),
+            new Color(c4.R, c4.G, c4.B, alphaUByte)
         );
     }
 }

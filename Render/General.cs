@@ -48,6 +48,32 @@ public static partial class GML
         return MatrixBuild(transform.Position, transform.Rotation, transform.Scale);
     }
     
+    public static byte ColorGetRed(Color3B color) => color.R;
+    public static byte ColorGetGreen(Color3B color) => color.G;
+    public static byte ColorGetBlue(Color3B color) => color.B; 
+    public static byte ColorGetHue(Color3B color) => color.Hue; 
+    public static byte ColorGetSaturation(Color3B color) => color.Saturation; 
+    public static byte ColorGetValue(Color3B color) => color.Value; 
+    
+    public static Color3B MakeColourHSV(byte h, byte s, byte v)
+    {
+        return new Color3B(Raylib.ColorFromHSV(h / 255f * 360f, s / 255f, v / 255f));
+    }
+    
+    public static Color3B MakeColourRGB(byte r, byte g, byte b)
+    {
+        return new Color3B(r, g, b);
+    }
+    
+    public static Color3B MergeColour(Color3B col1, Color3B col2, float amount)
+    {
+        var invAmount = 1.0f - amount;
+        return new Color3B(
+            (byte)(col1.R * invAmount + col2.R * amount), 
+            (byte)(col1.G * invAmount + col2.G * amount), 
+            (byte)(col1.B * invAmount + col2.B * amount));
+    }
+    
     /// <summary>
     /// 
     /// </summary>
@@ -75,6 +101,11 @@ public static partial class GML
     {
         Raylib.ClearBackground(color);
     }
+
+    public static float DrawGetAlpha()
+    {
+        return GraphicManager.Alpha;
+    }
     
     /// <summary>
     /// 
@@ -82,7 +113,7 @@ public static partial class GML
     /// <param name="alpha"></param>
     public static void DrawSetAlpha(float alpha)
     {
-        GML.GraphicManager.Color = GML.GraphicManager.Color with { A = (byte)(255 * alpha) };
+        GraphicManager.Color = GraphicManager.Color with { A = (byte)(255 * alpha) };
     }
     
     /// <summary>
@@ -93,12 +124,17 @@ public static partial class GML
     {
         GML.GraphicManager.Color = GML.GraphicManager.Color with { A = alpha };
     }
+
+    public static Color3B DrawGetColour()
+    {
+        return GraphicManager.Colour;
+    }
     
     /// <summary>
     /// 
     /// </summary>
     /// <param name="color"></param>
-    public static void DrawSetColor(Color3B color)
+    public static void DrawSetColour(Color3B color)
     {
         GML.GraphicManager.Color = GML.GraphicManager.Color with
         {
@@ -112,7 +148,7 @@ public static partial class GML
     /// 
     /// </summary>
     /// <param name="color"></param>
-    public static void DrawSetColor(Color color)
+    public static void DrawSetColour(Color color)
     {
         GML.GraphicManager.Color = color;
     }
@@ -187,9 +223,12 @@ public struct Color3B(byte r, byte g, byte b)
     public readonly byte G = g;
     public readonly byte B = b;
 
-    public Color3B(Color color) : this(color.R, color.G, color.B)
-    {
-    }
+    public byte Hue => (byte)(Raylib.ColorToHSV(this).X / 360f * 255f);
+    public byte Saturation => (byte)(Raylib.ColorToHSV(this).Y * 255f);
+    public byte Value => (byte)(Raylib.ColorToHSV(this).Z * 255f);
+
+
+    public Color3B(Color color) : this(color.R, color.G, color.B) { }
 
     public static implicit operator Color(Color3B color) =>
         new Color(color.R, color.G, color.B, GML.GraphicManager.Color.A);

@@ -20,7 +20,73 @@ public partial class GML
     {
         return FontManager.TryFindAsset(ind, out var font) ? font!.Name : "";
     }
+
+    public static int FontGetSize(Handle<Asset.Font> ind)
+    {
+        return FontManager.TryFindAsset(ind, out var font) ? font!.Size : -1;
+    }
+
+    public static FontInfo FontGetInfo(Handle<Asset.Font> ind)
+    {
+        return FontManager.TryFindAsset(ind, out var font) ? font!.Info : default;
+    }
+
+    public static Texture2D FontGetTexture(Handle<Asset.Font> ind)
+    {
+        return FontManager.TryFindAsset(ind, out var font) ? font!.Texture : default;
+    }
+
+    public static UVs FontGetUVs(Handle<Asset.Font> ind)
+    {
+        return FontManager.TryFindAsset(ind, out var font) ? font!.UVs : default;
+    }
+
+    public static IFontGlyph FontCacheGlyph(Handle<Asset.Font> ind, int glyphIndex)
+    {
+        return FontManager.TryFindAsset(ind, out var font) ? font!.CacheGlyph(glyphIndex) : default(FontGlyph);
+    }
+
+    public static Handle<Asset.Font> FontAdd(string name, int size, int first, int last)
+    {
+        // TODO 实现独立的基于first -> last的FontAdd
+        var resource = new ExpandoFont(name, size);
+        var range = "";
+        for (var i = first; i <= last; i++)
+            range += ((char)i).ToString();
+        
+        resource.AddGlyphsFromString(range);
+        
+        return (Handle<Asset.Font>)FontManager.Register(
+            new Asset.Font(
+                $"ExternalFont_{FontManager.Counter}", resource))!;
+    }
     
+    public static Handle<Asset.Font> FontAdd(string name, int size, string range)
+    {
+        var resource = new ExpandoFont(name, size);
+        resource.AddGlyphsFromString(range);
+        
+        return (Handle<Asset.Font>)FontManager.Register(
+            new Asset.Font(
+                $"ExternalFont_{FontManager.Counter}", resource))!;
+    }
+
+    public static void FontDelete(Handle<Asset.Font> ind)
+    {
+        if (!FontManager.TryFindAsset(ind, out var font)) return;
+        font!.Dispose();
+        FontManager.Remove(ind);
+    }
+
+    public static int FontTexturePageSize
+    {
+        get => DynamicFont.TextureWidth;
+        set
+        {
+            DynamicFont.TextureWidth = value;
+            DynamicFont.TextureHeight = value;
+        }
+    }
 }
 
 public interface IFont
@@ -140,8 +206,10 @@ public unsafe class NativeFontGlyphCollection(Font font, GlyphInfo* glyphs, int 
 public struct FontInfo
 {
     public int Size;
+    public int SDFSpread;
+    public string Name;
     public Texture2D Texture;
-    public IDictionary<int, IFontGlyph> Glyphs;
+    public IReadOnlyDictionary<int, IFontGlyph> Glyphs;
 }
 
 public struct FontGlyph : IFontGlyph
@@ -173,9 +241,9 @@ public sealed class DynamicFont : IDisposable, IFont
 {
     private bool _disposedValue;
     ~DynamicFont() => Dispose(false);
-    
-    public const int TextureWidth = 640;
-    public const int TextureHeight = 640;
+
+    public static int TextureWidth { get; internal set; } = 1024;
+    public static int TextureHeight { get; internal set;  } = 1024;
     public static readonly Vector2 TextureSize = new(TextureWidth, TextureHeight);
 
     private Image GlyphImage = new()
@@ -242,7 +310,7 @@ public sealed class DynamicFont : IDisposable, IFont
                 AddGlyphs(nativeGlyphsPtr, nativeGlyphs.Length, out exceed);
         }
     }
-
+    
     private bool AddGlyphImage(ref Image glyphImage, ref Rectangle glyphRec)
     {
         const int Padding = 4;
@@ -470,8 +538,8 @@ public sealed class ExpandoFont : IDisposable, IFont
 {
     private int FontIndex;
     private readonly byte[] Data;
-    
-    public readonly List<DynamicFont> Fonts = [];
+
+    private readonly List<DynamicFont> Fonts = [];
     public int Size { get; }
     
     private bool _disposedValue;
@@ -520,7 +588,7 @@ public sealed class ExpandoFont : IDisposable, IFont
             Fonts.Add(new DynamicFont(native, Size, out exceed));
         }
     }
-
+    
     public void AddGlyphsFromString(string range)
     {
         var fontManaged = Fonts[FontIndex];
@@ -568,7 +636,7 @@ public sealed class ExpandoFont : IDisposable, IFont
 }
 #endregion
 
-public abstract partial class Asset
+public partial class Asset
 {
     /// <summary>
     /// 
@@ -578,17 +646,36 @@ public abstract partial class Asset
     {
         private readonly IFont _resource;
         
+        public Raylib_cs.Font Native => _resource.Native;
+        
         public int Size => _resource.Size;
         public int SDFSpread => _resource.SDFSpread;
-        public Raylib_cs.Font Native => _resource.Native;
+        public UVs UVs => new(0, 0, 1, 1); // TODO
+        public FontInfo Info => new FontInfo() {
+            Size = _resource.Size,
+            SDFSpread = _resource.SDFSpread,
+            Glyphs = Glyphs,
+            Name = Name,
+            Texture = Texture
+        };
         public Texture2D Texture => _resource.Texture;
         public IReadOnlyDictionary<int, IFontGlyph> Glyphs => _resource.Glyphs;
         
-        public Font(string name, IFont font) : base(name)
+        internal Font(string name, IFont font) : base(name)
         {
             _resource = font;
         }
 
+        public IFontGlyph CacheGlyph(int glyphIndex)
+        {
+            if (_resource is ExpandoFont expandoFont)
+            {
+                expandoFont.AddGlyphsFromString(((char)glyphIndex).ToString());
+                return expandoFont.Glyphs[glyphIndex];
+            }
+            return default(FontGlyph);
+        }
+        
         public static Font ResolveHandle(Handle<Font> handle)
         {
             throw new NotImplementedException();

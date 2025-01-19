@@ -1,10 +1,9 @@
+using System.Numerics;
+
 namespace GMLib;
 
 public static partial class GML
 {
-    /// <summary>
-    /// 
-    /// </summary>
     public enum EventType
     {
         Create,
@@ -16,31 +15,17 @@ public static partial class GML
     }
     
     public static readonly ObjectManager ObjectManager = new();
-    
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="id"></param>
-    /// <returns></returns>
+
     public static bool InstanceExists(Handle<IObject>? id)
     {
         return ObjectManager.InstanceExists(id);
     }
     
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="id"></param>
     public static void InstanceDestroy(Handle<IObject>? id)
     {
         ObjectManager.InstanceDestroy(id);
     }
     
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="type"></param>
-    /// <param name="args"></param>
     public static void EventPerform(EventType type, params object?[] args)
     {
         ObjectManager.EventPerform(type, args);
@@ -58,6 +43,16 @@ public interface IObject : IHandleable<IObject>
         GML.ObjectManager.TryGetInstance(handle, out var value);
         return value;
     }
+
+    public Vector2 Position { get; set; }
+    
+    public Handle<IObject>? Id { get; internal set; }
+    
+    public bool InstanceExists();
+    
+    public bool InstanceDestroy();
+    
+    public bool EventPerform(GML.EventType type, params object?[] eventArgs);
     
     public class TimerAlarm
     {
@@ -75,11 +70,7 @@ public interface IObject : IHandleable<IObject>
             Timer = timeEnd - timeBegin;
             Callback = callback;
         }
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="isTriggered"></param>
+
         internal void Update(out bool isTriggered)
         {
             Timer --;
@@ -91,10 +82,6 @@ public interface IObject : IHandleable<IObject>
             isTriggered = false;
         }
         
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="caller"></param>
         internal void Trigger(IObject caller)
         {
             Callback?.Invoke(caller);
@@ -130,10 +117,7 @@ public interface IObject : IHandleable<IObject>
             return this;
         }
         #endregion
-        
-        /// <summary>
-        /// 
-        /// </summary>
+
         internal virtual void Update()
         {
             for (var i = 0; i < Alarms.Count; i++)
@@ -155,12 +139,22 @@ public interface IObject : IHandleable<IObject>
             return alarmManager.Add(alarm);
         }
     }
+}
+
+public abstract class Object : IObject
+{
+    public Vector2 Position { get; set; }
+
+    public Handle<IObject>? Id { get; private set; }
+    Handle<IObject>? IObject.Id
+    {
+        get => Id;
+        set => Id = value;
+    }
+
+    public abstract bool InstanceExists();
     
-    public Handle<IObject>? ID { get; internal set; }
-    
-    public bool InstanceExists();
-    
-    public bool InstanceDestroy();
+    public abstract bool InstanceDestroy();
     
     public abstract bool EventPerform(GML.EventType type, params object?[] eventArgs);
 }
@@ -168,12 +162,8 @@ public interface IObject : IHandleable<IObject>
 /// <summary>
 /// The base object of the template when construct user's own game object class.<br/>
 /// </summary>
-public abstract class Object: IObject
+public class GameObject: Object
 {
-    Handle<IObject>? IObject.ID { get => ID; set => ID = value; }
-    
-    public Handle<IObject>? ID;
-    
     /// <summary>
     /// 
     /// </summary>
@@ -222,31 +212,17 @@ public abstract class Object: IObject
         
     }
     
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <returns></returns>
-    public bool InstanceExists()
+    public override bool InstanceExists()
     {
-        return GML.ObjectManager.InstanceExists(ID);
+        return GML.ObjectManager.InstanceExists(Id);
     }
     
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <returns></returns>
-    public bool InstanceDestroy()
+    public override bool InstanceDestroy()
     {
-        return GML.ObjectManager.InstanceDestroy(ID);
+        return GML.ObjectManager.InstanceDestroy(Id);
     }
-    
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="type"></param>
-    /// <param name="eventArgs"></param>
-    /// <returns></returns>
-    public bool EventPerform(GML.EventType type, params object?[] eventArgs)
+
+    public override bool EventPerform(GML.EventType type, params object?[] eventArgs)
     {
         switch (type)
         {
@@ -270,60 +246,8 @@ public abstract class Object: IObject
         }
     }
     
-    public static implicit operator Handle<IObject>?(Object gameObject) => gameObject.ID;
+    public static implicit operator Handle<IObject>?(GameObject gameObject) => gameObject.Id;
 }
-
-#region Object ID * Abandoned
-/*
-/// <summary>
-/// The id type for the game object.<br/>
-/// It's not recommand to direcly using this id to control the object refering to although it's supported due to GameMaker syntex.
-/// This id should only be used when comparing with two object under GM code and managing object with GM.ObjectManager.
-/// </summary>
-public readonly struct ObjectID
-{
-    private readonly ushort _index = 0;
-
-    public ObjectID(ushort index)
-    {
-        _index = index;
-    }
-
-    /// <summary>
-    /// Compare the GMObject ID with another GMObject ID.
-    /// </summary>
-    /// <param name="obj"></param>
-    /// <returns>Only return true when the another object is GMObjectID type and the intern 16-bit index is identical.</returns>
-    public override bool Equals([NotNullWhen(true)] object? obj)
-    {
-        if (obj is ObjectID instanceId)
-        {
-            return instanceId._index == _index;
-        }
-        return false;
-    }
-    
-    /// <summary>
-    /// Return the intern index value of the GMObject ID.
-    /// </summary>
-    /// <returns>The intern 16-bit index value.</returns>
-    public override int GetHashCode()
-    {
-        return _index;
-    }
-
-    public static bool operator ==(ObjectID left, ObjectID right)
-    {
-        return left.Equals(right);
-    }
-    
-    public static bool operator !=(ObjectID left, ObjectID right)
-    {
-        return !(left == right);
-    }
-}
-*/
-#endregion
 
 /// <summary>
 /// The game object manager class.<br/>
@@ -332,10 +256,24 @@ public readonly struct ObjectID
 /// </summary>
 public class ObjectManager
 {
-    private ushort _currentInstanceIndex;
-    private readonly Dictionary<Handle<IObject>, IObject> _instanceCollection = [];
+    private ushort _index;
+    protected Dictionary<Handle<IObject>, IObject> MergedCollection
+    {
+        get
+        {
+            var collection = _collection
+                .ToDictionary(objectPair => objectPair.Key, objectPair => objectPair.Value);
+            foreach (var objectPair in SubManagers.SelectMany(subManager => subManager._collection))
+                collection.Add(objectPair.Key, objectPair.Value);
+            return collection;
+        }
+    }
 
-    private Handle<IObject> NextInstanceId() => new(_currentInstanceIndex ++);
+    private readonly Dictionary<Handle<IObject>, IObject> _collection = [];
+    
+    internal List<ObjectManager> SubManagers { get; } = [];
+    
+    private Handle<IObject> NextInstanceId() => new(_index ++);
     
     /// <summary>
     /// 
@@ -347,7 +285,11 @@ public class ObjectManager
     {
         if (id is { } vid)
         {
-            return _instanceCollection.TryGetValue(vid, out value);
+            if (_collection.TryGetValue(vid, out value))
+                return true;
+            foreach (var submanager in SubManagers)
+                if (submanager.TryGetInstance(vid, out value)) return true;
+            return false;
         }
         value = null;
         return false;
@@ -360,13 +302,13 @@ public class ObjectManager
     /// <param name="eventArgs"></param>
     public void EventPerform(GML.EventType type, params object?[] eventArgs)
     {
-        foreach (Handle<IObject> id in _instanceCollection.Keys)
+        foreach (var id in _collection.Keys)
         {
-            if (TryGetInstance(id, out IObject? gMObject) && gMObject is not null)
-            {
+            if (TryGetInstance(id, out var gMObject) && gMObject is not null)
                 gMObject.EventPerform(type, eventArgs);
-            }
         }
+        foreach (var submanager in SubManagers)
+            submanager.EventPerform(type, eventArgs);
     }
     
     /// <summary>
@@ -376,14 +318,14 @@ public class ObjectManager
     /// <returns></returns>
     public Handle<IObject>? AddObject(IObject gMObject)
     {
-        if (_instanceCollection.ContainsValue(gMObject))
+        if (_collection.ContainsValue(gMObject))
         {
             return null;
         }
 
-        Handle<IObject> instanceId = NextInstanceId();
-        gMObject.ID = instanceId;
-        _instanceCollection.Add(instanceId, gMObject);
+        var instanceId = NextInstanceId();
+        gMObject.Id = instanceId;
+        _collection.Add(instanceId, gMObject);
 
         return instanceId;
     }
@@ -395,10 +337,16 @@ public class ObjectManager
     /// <returns></returns>
     public bool RemoveObject(Handle<IObject>? id)
     {
-        if (id is { } vid)
-        {
-            return _instanceCollection.Remove(vid);
-        }
+        if (id is not { } vid)
+            return false;
+        
+        if (_collection.Remove(vid))
+            return true;
+        
+        foreach (var subManager in SubManagers)
+            if (subManager.RemoveObject(id))
+                return true;
+        
         return false;
     }
     
@@ -409,10 +357,16 @@ public class ObjectManager
     /// <returns></returns>
     public bool InstanceExists(Handle<IObject>? id)
     {
-        if (id is { } vid)
-        {
-            return _instanceCollection.ContainsKey(vid);
-        }
+        if (id is not { } vid)
+            return false;
+        
+        if (_collection.ContainsKey(vid))
+            return true;
+        
+        foreach (var subManager in SubManagers)
+            if (subManager.InstanceExists(id))
+                return true;
+        
         return false;
     }
     
@@ -423,11 +377,7 @@ public class ObjectManager
     /// <returns></returns>
     public bool InstanceDestroy(Handle<IObject>? id)
     {
-        if (id is { } vid)
-        {
-            return _instanceCollection.Remove(vid);
-        }
-        return false;
+        return RemoveObject(id);
     }
 }
 
@@ -435,11 +385,11 @@ public class ObjectManager
 /// <summary>
 /// The object can be defined more flexible, mainly for temporary test case.
 /// </summary>
-public class LightObject : IObject
+public class LightObject : Object
 {
     public delegate void EventCallback(LightObject sender, object?[] arguments);
 
-    public Handle<IObject>? ID;
+
     public readonly Dictionary<GML.EventType, EventCallback> EventCallbacks;
 
     public LightObject()
@@ -477,12 +427,9 @@ public class LightObject : IObject
         return this;
     }
     
-    #region IObject
-    Handle<IObject>? IObject.ID { get => ID; set => ID = value; }
+    public static implicit operator Handle<IObject>?(LightObject lightObject) => lightObject.Id;
 
-    public static implicit operator Handle<IObject>?(LightObject lightObject) => lightObject.ID;
-
-    bool IObject.EventPerform(GML.EventType type, params object?[] eventArgs)
+    public override bool EventPerform(GML.EventType type, params object?[] eventArgs)
     {
         if (!EventCallbacks.TryGetValue(type, out var eventHandler))
             return false;
@@ -490,15 +437,13 @@ public class LightObject : IObject
         return true;
     }
 
-    bool IObject.InstanceDestroy()
+    public override bool InstanceDestroy()
     {
-        return GML.ObjectManager.InstanceDestroy(ID);
+        return GML.ObjectManager.InstanceDestroy(Id);
     }
 
-    bool IObject.InstanceExists()
+    public override bool InstanceExists()
     {
-        return GML.ObjectManager.InstanceExists(ID);
+        return GML.ObjectManager.InstanceExists(Id);
     }
-
-    #endregion
 }

@@ -1,5 +1,5 @@
 using System.Collections;
-using System.Reflection;
+using Generators;
 
 namespace GMLib;
 
@@ -59,10 +59,7 @@ public abstract partial class Asset : IHandleable<Asset>
     /// 
     /// </summary>
     [AssetClassOf(AssetType.Unknown)]
-    public class Unknown
-    {
-        
-    }
+    public class Unknown;
 
     public static Asset? ResolveHandle(Handle<Asset> handle)
     {
@@ -71,35 +68,9 @@ public abstract partial class Asset : IHandleable<Asset>
     }
 }
 
-public abstract partial class Asset
-{
-    internal static readonly Dictionary<byte, System.Type> AssetPrefixToTypeMap = [];
-    internal static readonly Dictionary<System.Type, byte> TypeToAssetPrefixMap = [];
-    
-    static Asset()
-    {
-        var members = typeof(Asset).GetNestedTypes()
-            .Where(p => Attribute.IsDefined(p, typeof(AssetClassOf)));
-        foreach (var member in members)
-        {
-            var value = (byte)(member.GetCustomAttribute(typeof(AssetClassOf))! as AssetClassOf)!.AssetType;
-            AssetPrefixToTypeMap
-                .Add(value, member);
-            TypeToAssetPrefixMap
-                .Add(member, value);
-        }
-    }
-}
-
 public abstract partial class Asset(string name)
 {
     public readonly string Name = name;
-}
-
-internal static class AssetExtension
-{
-    internal static Type ToType(this byte type) => Asset.AssetPrefixToTypeMap[type];
-    internal static byte ToAssetPrefix(this Type type) => Asset.TypeToAssetPrefixMap[type];
 }
 
 #region Managed Asset * Abandoned
@@ -384,20 +355,8 @@ public sealed class AssetManager : IAssetManager
     }
 
     internal static readonly Dictionary<byte, IAssetManager> PrefixToManagerMap = [];
-    
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="prefix"></param>
-    /// <returns></returns>
     internal IAssetManager this[byte prefix] => PrefixToManagerMap[prefix];
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="asset"></param>
-    /// <returns></returns>
-    [Obsolete]
+    
     public Handle<Asset>? Register(Asset asset)
     {
         throw new NotImplementedException();

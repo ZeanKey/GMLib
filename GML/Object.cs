@@ -1,4 +1,5 @@
 using System.Dynamic;
+using System.Numerics;
 using System.Reflection;
 
 namespace GMLib;
@@ -24,22 +25,26 @@ public class ReservedInstanceField : Attribute
 public class Instance : DynamicObject, IObject
 {
 #region Reserved Fields
-    /// <summary>
-    /// 
-    /// </summary>
     [ReservedInstanceField("id")]
-    public Handle<IObject>? ID { get; private set; }
-    /// <summary>
-    /// 
-    /// </summary>
+    public Handle<IObject>? Id { get; private set; }
+    
     [ReservedInstanceField("self")]
     public Dictionary<string, object?>? Self { get; private set; }
-    /// <summary>
-    /// 
-    /// </summary>
+    
     [ReservedInstanceField("object_index")]
     public Asset.Object ObjectIndex { get; private set; }
-
+    
+    [ReservedInstanceField("x")]
+    public float X { get; set; }
+    
+    [ReservedInstanceField("y")]
+    public float Y { get; set; }
+    
+    public Vector2 Position
+    {
+        get => new(X, Y);
+        set { X = value.X; Y = value.Y; }
+    }
 #endregion
 
     /// <summary>
@@ -74,7 +79,7 @@ public class Instance : DynamicObject, IObject
 
     public override bool TrySetMember(SetMemberBinder binder, object? value)
     {
-        if ((IDictionary<string, object?>?)Self is IDictionary<string, object?> resource)
+        if ((IDictionary<string, object?>?)Self is { } resource)
         {
             resource[binder.Name] = value;
             return true;
@@ -85,7 +90,7 @@ public class Instance : DynamicObject, IObject
 #endregion
 
 #region IObject
-    Handle<IObject>? IObject.ID { get => ID; set => ID = value; }
+    Handle<IObject>? IObject.Id { get => Id; set => Id = value; }
 
     bool IObject.EventPerform(GML.EventType type, params object?[] eventArgs)
     {
@@ -95,17 +100,17 @@ public class Instance : DynamicObject, IObject
     bool IObject.InstanceDestroy()
     {
         Self = null;
-        return GML.ObjectManager.InstanceDestroy(ID);
+        return GML.ObjectManager.InstanceDestroy(Id);
     }
 
     bool IObject.InstanceExists()
     {
-        return GML.ObjectManager.InstanceExists(ID);
+        return GML.ObjectManager.InstanceExists(Id);
     }
 
     public static implicit operator Handle<IObject>?(Instance instance)
     {
-        return instance.ID;
+        return instance.Id;
     }
 #endregion
 }
@@ -166,9 +171,9 @@ public partial class Asset
         public Object(Object? parent, IDictionary<GML.EventType, Event> eventHandlers)
         {
             EventCallbacks = [];
-            foreach (var eventname in eventHandlers.Keys)
+            foreach (var eventName in eventHandlers.Keys)
             {
-                EventCallbacks[eventname] = eventHandlers[eventname];
+                EventCallbacks[eventName] = eventHandlers[eventName];
             }
             Parent = parent;
             parent?.Children.Add(this);

@@ -6,18 +6,8 @@ public partial class GML
 {
     public static AssetManager<Asset.Script> Script => AssetManager<Asset.Script>.Default;
     
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="handle"></param>
-    /// <returns></returns>
     public static bool ScriptExists(Handle<Asset.Script> handle) => Script.Exists(handle);
     
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="handle"></param>
-    /// <returns></returns>
     public static string ScriptGetName(Handle<Asset.Script> handle)
     {
         return Script.TryFindAsset(handle, out var script) ? script!.Name : "";
@@ -34,9 +24,6 @@ internal static class AssetScriptManagerExtension
 
 public partial class Asset
 {
-    /// <summary>
-    /// 
-    /// </summary>
     [AssetClassOf(AssetType.Script)]
     public sealed class Script : Asset, IHandleable<Script>
     {
