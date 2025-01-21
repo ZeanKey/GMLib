@@ -24,7 +24,7 @@ internal static class AssetScriptManagerExtension
 
 public partial class Asset
 {
-    [AssetClassOf(AssetType.Script)]
+    [RegisterAssetType(AssetType.Script)]
     public sealed class Script : Asset, IHandleable<Script>
     {
         public delegate object? Function(object? sender, params object?[]? arguments);

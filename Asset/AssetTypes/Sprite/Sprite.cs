@@ -1,36 +1,11 @@
 using static GMLib.RaylibExtension;
-using System.Numerics;
 
 namespace GMLib;
-
-/// <summary>
-/// 
-/// </summary>
-/// <param name="Position"></param>
-/// <param name="Size"></param>
-/// <param name="Offset"></param>
-/// <param name="NormalizationRatio"></param>
-public record struct SpriteUVs
-(
-    Vector2 Position,
-    Vector2 Size,
-    Vector2 Offset,
-    Vector2 NormalizationRatio
-);
-
-/// <summary>
-/// 
-/// </summary>
-public enum SpriteSpeedType
-{
-    FramesPerSecond,
-    FramesPerGameFrame
-}
 
 public partial class Asset
 {
 
-    [AssetClassOf(AssetType.Sprite)]
+    [RegisterAssetType(AssetType.Sprite)]
     public sealed class Sprite : Asset, IHandleable<Sprite>, IDisposable
     {   
         public class Frame(Texture2D texture, Vector2 position)
@@ -39,7 +14,7 @@ public partial class Asset
             public Vector2 Position = position;
         }
         
-        private Frame[] Frames; // The sub-images in the sprite
+        private readonly Frame[] Frames; // The sub-images in the sprite
         
         public int Number => Frames.Length;
         public float Speed { get; set; }

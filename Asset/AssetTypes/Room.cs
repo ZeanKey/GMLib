@@ -4,7 +4,7 @@ namespace GMLib;
 
 public partial class Asset
 {
-    [AssetClassOf(AssetType.Room)]
+    [RegisterAssetType(AssetType.Room)]
     public class Room : Asset, IHandleable<Room>
     {
         public Vector2 Size { get; set; }
