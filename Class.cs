@@ -1,7 +1,4 @@
-﻿global using Raylib_cs;
-using System.Diagnostics.CodeAnalysis;
-using System.Numerics;
-using Generators;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace GMLib;
 
@@ -9,29 +6,6 @@ namespace GMLib;
 /// 
 /// </summary>
 public static partial class GML;
-
-public static partial class GMLNative;
-
-public partial class GML
-{
-    public static void Init()
-    {
-        Room = new Room(new Asset.Room("roomTest") {
-            Size = new Vector2(640, 480)
-        });
-    }
-}
-
-public partial class GMLNative
-{
-    public static void show_debug_message(params object[] args)
-    {
-        foreach (var arg in args)
-        {
-            Console.WriteLine(arg ?? "undefined");
-        }
-    }
-}
 
 public readonly record struct UVs(int Left, int Top, int Right, int Bottom);
 
