@@ -9,9 +9,9 @@ public static partial class GML
     /// 
     /// </summary>
     /// <param name="font"></param>
-    public static void DrawSetFont(Asset.Font font)
+    public static void DrawSetFont(Handle<Asset.Font> font)
     {
-        GraphicManager.Font = font;
+        Graphics.Font = font;
     }
     
     /// <summary>
@@ -20,7 +20,7 @@ public static partial class GML
     /// <param name="halign"></param>
     public static void DrawSetHalign(FontHAlignment halign)
     {
-        GraphicManager.HAlignment = halign;
+        Graphics.HAlignment = halign;
     }
     
     /// <summary>
@@ -29,16 +29,16 @@ public static partial class GML
     /// <param name="valign"></param>
     public static void DrawSetValign(FontVAlignment valign)
     {
-        GraphicManager.VAlignment = valign;
+        Graphics.VAlignment = valign;
     }
     
     /// <summary>
     /// 
     /// </summary>
     /// <returns></returns>
-    public static Asset.Font DrawGetFont()
+    public static Handle<Asset.Font> DrawGetFont()
     {
-        return GraphicManager.Font!;
+        return Graphics.Font!;
     }
     
     /// <summary>
@@ -47,7 +47,7 @@ public static partial class GML
     /// <returns></returns>
     public static FontHAlignment DrawGetHalign()
     {
-        return GraphicManager.HAlignment;
+        return Graphics.HAlignment;
     }
     
     /// <summary>
@@ -56,7 +56,7 @@ public static partial class GML
     /// <returns></returns>
     public static FontVAlignment DrawGetValign()
     {
-        return GraphicManager.VAlignment;
+        return Graphics.VAlignment;
     }
     
     /// <summary>
@@ -134,7 +134,7 @@ public static partial class GML
     /// <param name="angle"></param>
     public static void DrawTextExtTransformed(Vector2 position, string text, float sep, float w, Vector2 scale, float angle)
     {
-        DrawTextExtTransformedColour(position, text, sep, w, scale, angle, GraphicManager.Color, GraphicManager.Color, GraphicManager.Color, GraphicManager.Color);
+        DrawTextExtTransformedColour(position, text, sep, w, scale, angle, Graphics.Color, Graphics.Color, Graphics.Color, Graphics.Color);
     }
     
     /// <summary>
@@ -152,12 +152,16 @@ public static partial class GML
     /// <param name="c4"></param>
     public static void DrawTextExtTransformedColour(Vector2 position, string text, float sep, float w, Vector2 scale, float angle, Color c1, Color c2, Color c3, Color c4)
     {
-        var font = GraphicManager.Font;
+        var font = Graphics.Font;
+        if (!Font.TryFindAsset(font, out var fontRef)) 
+            throw new Exception("Font not found");
+        var fontAsset = fontRef!.Target as Asset.Font ?? throw new Exception("Font not found");
+        
         if (sep < 0)
             sep = 0;
         else
-            sep -= font.Size * scale.Y;
+            sep -= fontAsset.Size * scale.Y;
         
-        DrawTextProGeneral(font, text, position, Vector2.Zero, angle, scale, (Vector2)GraphicManager.Alignment, sep, 0, c1, c2, c3, c4);
+        DrawTextProGeneral(fontAsset, text, position, Vector2.Zero, angle, scale, (Vector2)Graphics.Alignment, sep, 0, c1, c2, c3, c4);
     }
 }

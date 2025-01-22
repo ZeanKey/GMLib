@@ -2,10 +2,13 @@ using static GMLib.RaylibExtension;
 
 namespace GMLib;
 
+partial class GML
+{
+    public static AssetManager<Asset.Sprite> Sprite => AssetManager<Asset.Sprite>.Default;
+}
+
 public partial class Asset
 {
-
-    [RegisterAssetType(AssetType.Sprite)]
     public sealed class Sprite : Asset, IHandleable<Sprite>, IDisposable
     {   
         public class Frame(Texture2D texture, Vector2 position)
@@ -37,7 +40,7 @@ public partial class Asset
         /// <param name="index"></param>
         public Frame this[int index] => Frames[index % Number];
 
-        public Sprite(string name, Texture2D texture, int imgnum, Vector2 orig) : base(name)
+        public Sprite(Texture2D texture, int imgnum, Vector2 orig)
         {
             Offset = orig;
             Frames = new Frame[imgnum];
@@ -65,7 +68,7 @@ public partial class Asset
         
         public void Draw(int subimg, Rectangle dest)
         {
-            var colour = GML.GraphicManager.Color;
+            var colour = GML.Graphics.Color;
             var frame = this[subimg];
             Draw(subimg, new(frame.Position, Size), dest, 0, colour, colour, colour, colour);
         }
@@ -77,7 +80,7 @@ public partial class Asset
         
         public void Draw(int subimg, Rectangle source, Vector2 position)
         {
-            var colour = GML.GraphicManager.Color;
+            var colour = GML.Graphics.Color;
             Draw(subimg, source, new(position, Size), 0, colour, colour, colour, colour);
         }
         
@@ -89,19 +92,19 @@ public partial class Asset
 
         public void Draw(int subimg, Vector2 position)
         {
-            var colour = GML.GraphicManager.Color;
+            var colour = GML.Graphics.Color;
             Draw(subimg, position, new Vector2(1, 1), 0, colour);
         }
         #endregion
         
-        public static Sprite? ResolveHandle(Handle<Sprite> handle)
+        public static WeakReference? ResolveHandle(Handle<Sprite> handle)
         {
             GML.Sprite.TryFindAsset(handle, out var sprite);
             return sprite;
         }
         
         #region Disposable
-        private bool _disposedValue;
+        private bool DisposedValue;
         ~Sprite() => Dispose(false);
 
         public void Dispose()
@@ -112,9 +115,9 @@ public partial class Asset
         
         private void Dispose(bool disposing)
         {
-            if (_disposedValue) return;
+            if (DisposedValue) return;
             // TODO
-            _disposedValue = true;
+            DisposedValue = true;
         }
         #endregion
     }

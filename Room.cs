@@ -22,12 +22,12 @@ public class Room
         
     public void Init()
     {
-        GML.ObjectManager.SubManagers.Add(ObjectManager);
+        GML.Object.SubManagers.Add(ObjectManager);
     }
 
     public void Uninit()
     {
-        GML.ObjectManager.SubManagers.Remove(ObjectManager);
+        GML.Object.SubManagers.Remove(ObjectManager);
     }
 }
 

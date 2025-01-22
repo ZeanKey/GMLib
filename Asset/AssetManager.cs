@@ -1,182 +1,73 @@
 ﻿namespace GMLib;
 
-
-/// <summary>
-/// 
-/// </summary>
-/// <typeparam name="TAsset"></typeparam>
-public sealed class AssetManager<TAsset> : IAssetManager where TAsset : Asset, IHandleable<TAsset>
+public sealed class AssetManager<TAsset> : HandleManager<TAsset>, IAssetManager where TAsset : Asset, IHandleable<TAsset>
 {
-    private byte AssetIndexCounter;
-    private readonly Dictionary<Handle<TAsset>, TAsset> AssetHandleToResourceMap = []; // Get Asset object from Asset Handle
-    private readonly Dictionary<string, Handle<TAsset>> AssetNameToHandleMap = []; // Get Asset Handle from Asset name
-
-    public int Counter => AssetIndexCounter;
-    public static readonly byte Prefix = typeof(TAsset).ToAssetPrefix();
-
-    public static AssetManager<TAsset> Default { get; internal set; } = new();
+    private readonly Dictionary<string, Handle<TAsset>> Assets = [];
+    
+    public new static AssetManager<TAsset> Default { get; } = new();
 
     static AssetManager()
     {
-        AssetManager.PrefixToManagerMap[Prefix] = Default;
+        AssetManager.Managers[typeof(TAsset)] = Default;
     }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <returns></returns>
-    private Handle<TAsset> NextHandle() => 
-        new Handle<TAsset>((ushort)((Prefix << 8) + AssetIndexCounter ++));
     
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="asset"></param>
-    /// <returns></returns>
-    public Handle<TAsset>? Register(TAsset asset)
+    public Handle<TAsset> Register(string name, TAsset asset)
     {
-        if (AssetHandleToResourceMap.ContainsValue(asset))
-            return null;
-
-        var handle = NextHandle();
-        AssetHandleToResourceMap
-            .Add(handle, asset);
-        AssetNameToHandleMap
-            .Add(asset.Name, handle);
-
+        var handle = Create(asset);
+        Assets[name] = handle;
         return handle;
     }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="asset"></param>
-    /// <returns></returns>
-    public bool Override(TAsset asset)
+    
+    public bool TryFindAsset(Handle<TAsset> handle, out WeakReference? assetRef)
     {
-        if (!AssetNameToHandleMap.TryGetValue(asset.Name, out var handle))
-            return false;
-
-        AssetHandleToResourceMap[handle] = asset;
+        var ret = Contents.TryGetValue(handle, out var asset);
+        assetRef = ret ? new WeakReference(asset!) : null;
+        return ret;
+    }
+    
+    public bool TryFindAsset(string name, out WeakReference? assetRef)
+    {
+        assetRef = null;
+        if (!TryFindAssetHandle(name, out Handle<TAsset> handle) ||
+            !Contents.TryGetValue(handle, out var asset)) return false;
+        assetRef = new WeakReference(asset);
         return true;
     }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="handle"></param>
-    /// <returns></returns>
-    public bool Remove(Handle<TAsset> handle)
-    {
-        return AssetHandleToResourceMap.Remove(handle);
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="handle"></param>
-    /// <returns></returns>
-    public bool Exists(Handle<TAsset> handle)
-    {
-        return AssetHandleToResourceMap.ContainsKey(handle);
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="handle"></param>
-    /// <param name="asset"></param>
-    /// <returns></returns>
-    public bool TryFindAsset(Handle<TAsset> handle, out TAsset? asset)
-    {
-        return AssetHandleToResourceMap.TryGetValue(handle, out asset);
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="name"></param>
-    /// <param name="asset"></param>
-    /// <returns></returns>
-    public bool TryFindAsset(string name, out TAsset? asset)
-    {
-        asset = null;
-        return TryFindAssetHandle(name, out Handle<TAsset> handle) && AssetHandleToResourceMap.TryGetValue(handle, out asset);
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="name"></param>
-    /// <param name="handle"></param>
-    /// <returns></returns>
+    
     public bool TryFindAssetHandle(string name, out Handle<TAsset> handle)
     {
-        return AssetNameToHandleMap.TryGetValue(name, out handle);
+        return Assets.TryGetValue(name, out handle);
     }
 
-#region IAssetManager
-    public Handle<Asset>[] Handles => AssetHandleToResourceMap.Keys
-        .Select<Handle<TAsset>, Handle<Asset>>((handle) => new(handle)).ToArray();
+    public IHandle[] Handles => Contents.Keys.Cast<IHandle>().ToArray();
 
-    public bool Remove(Handle<Asset> handle)
+    public bool TryFindAsset(IHandle handle, out WeakReference? assetRef)
     {
-        if (handle.Prefix != Prefix) return false;
-        return Remove(new Handle<TAsset>(handle));
+        var ret = Contents.TryGetValue(new Handle<TAsset>(handle), out var asset);
+        assetRef = ret ? new WeakReference(asset!) : null;
+        return ret;
     }
 
-    public bool Exists(Handle<Asset> handle)
-    {
-        if (handle.Prefix != Prefix) return false;
-        return Exists(new Handle<TAsset>(handle));
-    }
-
-    public bool TryFindAsset(Handle<Asset> handle, out Asset? asset)
-    {
-        if (handle.Prefix != Prefix)
-        {
-            asset = null;
-            return false;
-        }
-        var result = TryFindAsset(new Handle<TAsset>(handle), out var assetT);
-        asset = assetT;
-        return result;
-    }
-
-    public bool TryFindAsset(string name, out Asset? asset)
-    {
-        if (TryFindAssetHandle(name, out Handle<Asset> handle))
-        {
-            return TryFindAsset(handle, out asset);
-        }
-        asset = null;
-        return false;
-    }
-
-    public bool TryFindAssetHandle(string name, out Handle<Asset> handle)
+    public bool TryFindAssetHandle(string name, out IHandle handle)
     {
         if (TryFindAssetHandle(name, out Handle<TAsset> handleT))
         {
-            handle = new(handleT);
+            handle = handleT;
             return true;
         }
-        handle = default;
+        handle = default(Handle<Asset.Unknown>);
         return false;
     }
-#endregion
 }
 
-/// <summary>
-/// 
-/// </summary>
 public sealed class AssetManager : IAssetManager
 {
-    public Handle<Asset>[] Handles
+    public IHandle[] Handles
     { 
         get
         {
-            List<Handle<Asset>> result = [];
-            foreach (var manager in PrefixToManagerMap.Values)
+            List<IHandle> result = [];
+            foreach (var manager in Managers.Values)
             {
                 result.AddRange(manager.Handles);
             }
@@ -184,80 +75,46 @@ public sealed class AssetManager : IAssetManager
         }
     }
 
-    internal static readonly Dictionary<byte, IAssetManager> PrefixToManagerMap = [];
-    internal IAssetManager this[byte prefix] => PrefixToManagerMap[prefix];
+    internal static readonly Dictionary<Type, IAssetManager> Managers = [];
+    internal IAssetManager this[Type type] => Managers[type];
+
+    internal void RegisterManager(Type type, IAssetManager manager)
+    {
+        Managers[type] = manager;
+    }
+
+    public bool Contains<TAsset>(IHandle handle) where TAsset : Asset, IHandleable<TAsset>
+    {
+        return ((AssetManager<TAsset>)this[typeof(TAsset)]).Contains(new Handle<TAsset>(handle));
+    }
     
-    public Handle<Asset>? Register(Asset asset)
+    public bool TryFindAsset<TAsset>(IHandle handle, out WeakReference? assetRef) where TAsset : Asset, IHandleable<TAsset>
+    {
+        return ((AssetManager<TAsset>)this[typeof(TAsset)]).TryFindAsset(handle, out assetRef);
+    }
+    
+    public bool TryFindAsset<TAsset>(string name, out WeakReference? assetRef) where TAsset : Asset, IHandleable<TAsset>
+    { 
+        return ((AssetManager<TAsset>)this[typeof(TAsset)]).TryFindAsset(name, out assetRef);
+    }
+    
+    public bool TryFindAssetHandle<TAsset>(string name, out Handle<TAsset> handle) where TAsset : Asset, IHandleable<TAsset>
+    {
+        return ((AssetManager<TAsset>)this[typeof(TAsset)]).TryFindAssetHandle(name, out handle);
+    }
+    
+    public bool TryFindAsset(IHandle handle, out WeakReference? assetRef)
     {
         throw new NotImplementedException();
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="handle"></param>
-    /// <returns></returns>
-    public bool Remove(Handle<Asset> handle)
+    public bool TryFindAsset(string name, out WeakReference? assetRef)
     {
-        return this[handle.Prefix].Remove(handle);
+        throw new NotImplementedException();
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="handle"></param>
-    /// <returns></returns>
-    public bool Exists(Handle<Asset> handle)
+    public bool TryFindAssetHandle(string name, out IHandle? handle)
     {
-        return this[handle.Prefix].Exists(handle);
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="handle"></param>
-    /// <param name="asset"></param>
-    /// <returns></returns>
-    public bool TryFindAsset(Handle<Asset> handle, out Asset? asset)
-    {
-        return this[handle.Prefix].TryFindAsset(handle, out asset);
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="name"></param>
-    /// <param name="asset"></param>
-    /// <returns></returns>
-    public bool TryFindAsset(string name, out Asset? asset)
-    {
-        foreach (var manager in PrefixToManagerMap.Values)
-        {
-            if (manager.TryFindAssetHandle(name, out var handle))
-            {
-                return manager.TryFindAsset(handle, out asset);
-            }
-        }
-        asset = null;
-        return false;
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="name"></param>
-    /// <param name="handle"></param>
-    /// <returns></returns>
-    public bool TryFindAssetHandle(string name, out Handle<Asset> handle)
-    {
-        foreach (var manager in PrefixToManagerMap.Values)
-        {
-            if (manager.TryFindAssetHandle(name, out handle))
-            {
-                return true;
-            }
-        }
-        handle = default;
-        return false;
+        throw new NotImplementedException();
     }
 }

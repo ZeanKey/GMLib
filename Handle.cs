@@ -1,28 +1,26 @@
 ﻿namespace GMLib;
 
-/// <summary>
-/// This class works like the weak reference to deal with GM type that can be disposed when needed.
-/// </summary>
-/// <typeparam name="T"></typeparam>
-public readonly struct Handle<T> : IHandle, IEquatable<Handle<T>> where T : IHandleable<T>
+public interface IHandle
 {
-    ushort IHandle.Index { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-    
+    internal ushort Index { get; }
+}
+
+public readonly struct Handle<T> : IEquatable<Handle<T>>, IHandle where T : class, IHandleable<T>
+{
+    ushort IHandle.Index => Index;
     private readonly ushort Index = 0;
-    public byte Prefix => (byte)(Index >> 8);
-    public byte Id => (byte)(Index & 0x0F);
 
     public Handle(ushort index)
     {
         Index = index;
     }
-    
+
     public Handle(IHandle handle)
     {
         Index = handle.Index;
     }
-
-    public static implicit operator T?(Handle<T> value)
+    
+    public static explicit operator WeakReference?(Handle<T> value)
     {
         return T.ResolveHandle(value);
     }
@@ -34,8 +32,7 @@ public readonly struct Handle<T> : IHandle, IEquatable<Handle<T>> where T : IHan
     
     public override string ToString()
     {
-        // return Convert.ToString(Index, toBase: 2).PadLeft(16, '0');
-        return $"Handle {Prefix.ToType().Name} {Id}";
+        return $"Handle {typeof(T).Name} {Index}";
     }
 
     public bool Equals(Handle<T> other)
@@ -52,8 +49,14 @@ public readonly struct Handle<T> : IHandle, IEquatable<Handle<T>> where T : IHan
     {
         return Index.GetHashCode();
     }
-}
 
-public class Handle
-{
+    public static bool operator ==(Handle<T> left, Handle<T> right)
+    {
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(Handle<T> left, Handle<T> right)
+    {
+        return !(left == right);
+    }
 }

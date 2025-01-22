@@ -4,7 +4,7 @@ namespace GMLib;
 
 public static partial class GML
 {   
-    public static GraphicManager GraphicManager = new();
+    public static readonly GraphicManager Graphics = new();
 
     /// <summary>
     /// 
@@ -104,7 +104,7 @@ public static partial class GML
 
     public static float DrawGetAlpha()
     {
-        return GraphicManager.Alpha;
+        return Graphics.Alpha;
     }
     
     /// <summary>
@@ -113,7 +113,7 @@ public static partial class GML
     /// <param name="alpha"></param>
     public static void DrawSetAlpha(float alpha)
     {
-        GraphicManager.Color = GraphicManager.Color with { A = (byte)(255 * alpha) };
+        Graphics.Color = Graphics.Color with { A = (byte)(255 * alpha) };
     }
     
     /// <summary>
@@ -122,12 +122,12 @@ public static partial class GML
     /// <param name="alpha"></param>
     public static void DrawSetAlpha(byte alpha)
     {
-        GML.GraphicManager.Color = GML.GraphicManager.Color with { A = alpha };
+        GML.Graphics.Color = GML.Graphics.Color with { A = alpha };
     }
 
     public static Color3B DrawGetColour()
     {
-        return GraphicManager.Colour;
+        return Graphics.Colour;
     }
     
     /// <summary>
@@ -136,7 +136,7 @@ public static partial class GML
     /// <param name="color"></param>
     public static void DrawSetColour(Color3B color)
     {
-        GML.GraphicManager.Color = GML.GraphicManager.Color with
+        GML.Graphics.Color = GML.Graphics.Color with
         {
             R = color.R,
             G = color.G,
@@ -150,7 +150,7 @@ public static partial class GML
     /// <param name="color"></param>
     public static void DrawSetColour(Color color)
     {
-        GML.GraphicManager.Color = color;
+        GML.Graphics.Color = color;
     }
 
 }
@@ -231,7 +231,7 @@ public struct Color3B(byte r, byte g, byte b)
     public Color3B(Color color) : this(color.R, color.G, color.B) { }
 
     public static implicit operator Color(Color3B color) =>
-        new Color(color.R, color.G, color.B, GML.GraphicManager.Color.A);
+        new Color(color.R, color.G, color.B, GML.Graphics.Color.A);
 }
 
 /// <summary>
@@ -252,7 +252,7 @@ public class GraphicManager
         set => Alignment = Alignment with { VAlignment = value };
     }
     
-    public Asset.Font Font { get; set; }
+    public Handle<Asset.Font> Font { get; set; }
     
     public Color Color { get; set; } = Color.White;
     public Color3B Colour
@@ -262,7 +262,7 @@ public class GraphicManager
     } // GameMaker style colour (RGB channels only)
     public float Alpha
     {
-        get => GML.GraphicManager.Color.A;
-        set => GML.GraphicManager.Color = GML.GraphicManager.Color with { A = (byte)(255 * value) };
+        get => GML.Graphics.Color.A;
+        set => GML.Graphics.Color = GML.Graphics.Color with { A = (byte)(255 * value) };
     } // GameMaker style alpha (A channel only)
 }

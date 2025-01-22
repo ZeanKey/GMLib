@@ -4,7 +4,7 @@ namespace GMLib;
 /// 
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public interface IHandleable<T> where T : IHandleable<T>
+public interface IHandleable<T> where T : class?, IHandleable<T>
 {
-    public static abstract T? ResolveHandle(Handle<T> handle);
+    public static abstract WeakReference? ResolveHandle(Handle<T> handle);
 }

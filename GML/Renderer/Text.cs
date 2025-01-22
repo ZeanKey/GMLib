@@ -7,34 +7,34 @@ namespace GMLib;
 
 public partial class GMLNative
 {
-    public static void draw_set_font(Asset.Font font)
+    public static void draw_set_font(Handle<Asset.Font> font)
     {
-        GML.GraphicManager.Font = font;
+        GML.Graphics.Font = font;
     }
     
     public static void draw_set_halign(FontHAlignment halign)
     {
-        GML.GraphicManager.HAlignment = halign;
+        GML.Graphics.HAlignment = halign;
     }
     
     public static void draw_set_valign(FontVAlignment valign)
     {
-        GML.GraphicManager.VAlignment = valign;
+        GML.Graphics.VAlignment = valign;
     }
     
-    public static Asset.Font draw_get_font()
+    public static Handle<Asset.Font> draw_get_font()
     {
-        return GML.GraphicManager.Font;
+        return GML.Graphics.Font;
     }
     
     public static FontHAlignment draw_get_halign()
     {
-        return GML.GraphicManager.HAlignment;
+        return GML.Graphics.HAlignment;
     }
     
     public static FontVAlignment draw_get_valign()
     {
-        return GML.GraphicManager.VAlignment;
+        return GML.Graphics.VAlignment;
     }
     
     public static void draw_text(float x, float y, string text)

@@ -4,51 +4,31 @@ public static partial class GML
 {
     public static readonly AssetManager Asset = new();
     
-    public static Handle<Asset> AssetGetIndex(string name)
+    public static IHandle AssetGetIndex(string name)
     {
         return Asset.TryFindAssetHandle(name, out var handle) ? handle : default;
     }
 
     public static Type AssetGetType(string name)
     {
-        return Asset.TryFindAssetHandle(name, out var handle) ? handle.Prefix.ToType() : typeof(Asset.Unknown);
+        return Asset.TryFindAsset(name, out var asset) ? asset!.GetType() : typeof(Asset.Unknown);
     }
-
-    public static Handle<Asset>[] AssetGetIds(AssetType assetType)
+    
+    public static Type AssetGetType(Asset asset) => asset.GetType();
+    
+    public static Handle<TAsset>[] AssetGetIds<TAsset>() where TAsset : Asset, IHandleable<TAsset>
     {
-        return Asset[(byte)assetType].Handles;
+        return Asset[typeof(TAsset)].Handles.Cast<Handle<TAsset>>().ToArray();
     }
 }
 
-/// <summary>
-/// 
-/// </summary>
-[AttributeUsage(AttributeTargets.Class)]
-internal class RegisterAssetType(AssetType assetType) : Attribute
+public abstract partial class Asset
 {
-    internal AssetType AssetType { get; init; } = assetType;
-}
-
-/// <summary>
-/// 
-/// </summary>
-public abstract partial class Asset : IHandleable<Asset>
-{
-    /// <summary>
-    /// 
-    /// </summary>
-    [RegisterAssetType(AssetType.Unknown)]
-    public class Unknown;
-
-    public static Asset? ResolveHandle(Handle<Asset> handle)
+    public class Unknown : IHandleable<Unknown>
     {
-        GML.Asset.TryFindAsset(handle, out var result);
-        return result;
+        public static WeakReference ResolveHandle(Handle<Unknown> handle)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
-
-public abstract partial class Asset(string name)
-{
-    public readonly string Name = name;
-}
-

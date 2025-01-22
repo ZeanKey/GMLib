@@ -6,11 +6,11 @@ public partial class GML
 {
     public static AssetManager<Asset.Script> Script => AssetManager<Asset.Script>.Default;
     
-    public static bool ScriptExists(Handle<Asset.Script> handle) => Script.Exists(handle);
+    public static bool ScriptExists(Handle<Asset.Script> handle) => Script.Contains(handle);
     
     public static string ScriptGetName(Handle<Asset.Script> handle)
     {
-        return Script.TryFindAsset(handle, out var script) ? script!.Name : "";
+        return Script.TryFindAsset(handle, out var scriptRef) ? (scriptRef!.Target as Asset.Script)?.Name ?? " " : " ";
     }
 }
 
@@ -24,38 +24,42 @@ internal static class AssetScriptManagerExtension
 
 public partial class Asset
 {
-    [RegisterAssetType(AssetType.Script)]
     public sealed class Script : Asset, IHandleable<Script>
     {
         public delegate object? Function(object? sender, params object?[]? arguments);
+        public readonly string Name;
         public readonly Function Body;
         public readonly bool IsConstructor;
 
-        public Script(Function body, string name) : base(name)
+        public Script(Function body, string name)
         {
+            Name = name;
             Body = body;
             IsConstructor = false;
         }
         
-        public Script(Function body) : base(GML.Script.NextName())
+        public Script(Function body)
         {
+            Name = GML.Script.NextName();
             Body = body;
             IsConstructor = false;
         }
         
-        public Script(Action<object?, object?[]?> body, string name) : base(name)
+        public Script(Action<object?, object?[]?> body, string name)
         {
+            Name = name;
             Body = (sender, arguments) => { body(sender, arguments); return null;};
             IsConstructor = false;
         }
         
-        public Script(Action<object?, object?[]?> body) : base(GML.Script.NextName())
+        public Script(Action<object?, object?[]?> body)
         {
+            Name = GML.Script.NextName();
             Body = (sender, arguments) => { body(sender, arguments); return null;};
             IsConstructor = false;
         }
 
-        public static Script? ResolveHandle(Handle<Script> handle)
+        public static WeakReference? ResolveHandle(Handle<Script> handle)
         {
             GML.Script.TryFindAsset(handle, out var asset);
             return asset;

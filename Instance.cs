@@ -89,7 +89,7 @@ public class Instance : DynamicObject, IObject
 #region IObject
     Handle<IObject>? IObject.Id { get => Id; set => Id = value; }
 
-    bool IObject.EventPerform(GML.EventType type, params object?[] eventArgs)
+    bool IObject.EventPerform(ObjectEventType type, params object?[] eventArgs)
     {
         return ObjectIndex.EventPerform(this, this, type, eventArgs);
     }
@@ -97,12 +97,12 @@ public class Instance : DynamicObject, IObject
     bool IObject.InstanceDestroy()
     {
         Self = null;
-        return GML.ObjectManager.InstanceDestroy(Id);
+        return GML.Object.InstanceDestroy(Id);
     }
 
     bool IObject.InstanceExists()
     {
-        return GML.ObjectManager.InstanceExists(Id);
+        return GML.Object.InstanceExists(Id);
     }
 
     public static implicit operator Handle<IObject>?(Instance instance)

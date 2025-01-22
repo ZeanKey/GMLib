@@ -7,7 +7,6 @@ public partial class Asset
     /// <summary>
     /// 
     /// </summary>
-    [RegisterAssetType(AssetType.Object)]
     public sealed class Object : IHandleable<Object>
     {
         public delegate void Event(Instance sender, EventArguments args);
@@ -38,7 +37,7 @@ public partial class Asset
         }
 #endregion
 
-        public Dictionary<GML.EventType, Event> EventCallbacks;
+        public Dictionary<ObjectEventType, Event> EventCallbacks;
         public Object? Parent;
         public HashSet<Object> Children;
 
@@ -55,7 +54,7 @@ public partial class Asset
             parent?.Children.Add(this);
             Children = [];
         }
-        public Object(Object? parent, IDictionary<GML.EventType, Event> eventHandlers)
+        public Object(Object? parent, IDictionary<ObjectEventType, Event> eventHandlers)
         {
             EventCallbacks = [];
             foreach (var eventName in eventHandlers.Keys)
@@ -75,11 +74,11 @@ public partial class Asset
         /// <param name="type"></param>
         /// <param name="eventArgs"></param>
         /// <returns></returns>
-        public bool EventPerform(Instance paramSelf, Instance paramOther, GML.EventType type, params object?[] eventArgs)
+        public bool EventPerform(Instance paramSelf, Instance paramOther, ObjectEventType type, params object?[] eventArgs)
         {
             if (EventCallbacks.TryGetValue(type, out var eventHandler))
             {
-                if (type == GML.EventType.Alarm)
+                if (type == ObjectEventType.Alarm)
                 {
                     eventHandler.Invoke(paramSelf, new AlarmEventArguments(paramOther, (int)eventArgs[0]!));
                     return true;
@@ -90,7 +89,7 @@ public partial class Asset
             return false;
         }
 
-        public static Object? ResolveHandle(Handle<Object> handle)
+        public static WeakReference ResolveHandle(Handle<Object> handle)
         {
             throw new NotImplementedException();
         }

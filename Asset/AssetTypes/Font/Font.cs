@@ -4,41 +4,41 @@ namespace GMLib;
 
 public partial class GML
 {
-    public static AssetManager<Asset.Font> FontManager => AssetManager<Asset.Font>.Default;
+    public static AssetManager<Asset.Font> Font => AssetManager<Asset.Font>.Default;
     
     public static bool FontExists(Handle<Asset.Font> ind)
     {
-        return FontManager.Exists(ind);
-    }
-
-    public static string FontGetName(Handle<Asset.Font> ind)
-    {
-        return FontManager.TryFindAsset(ind, out var font) ? font!.Name : "";
+        return Font.Contains(ind);
     }
 
     public static int FontGetSize(Handle<Asset.Font> ind)
     {
-        return FontManager.TryFindAsset(ind, out var font) ? font!.Size : -1;
+        return Font.TryFindAsset(ind, out var font) ? 
+            (font!.Target as Asset.Font)?.Size ?? -1 : -1;
     }
 
     public static FontInfo FontGetInfo(Handle<Asset.Font> ind)
     {
-        return FontManager.TryFindAsset(ind, out var font) ? font!.Info : default;
+        return Font.TryFindAsset(ind, out var font) ? 
+            (font!.Target as Asset.Font)?.Info ?? default : default;
     }
 
     public static Texture2D FontGetTexture(Handle<Asset.Font> ind)
     {
-        return FontManager.TryFindAsset(ind, out var font) ? font!.Texture : default;
+        return Font.TryFindAsset(ind, out var font) ? 
+            (font!.Target as Asset.Font)?.Texture ?? default : default;
     }
 
     public static UVs FontGetUVs(Handle<Asset.Font> ind)
     {
-        return FontManager.TryFindAsset(ind, out var font) ? font!.UVs : default;
+        return Font.TryFindAsset(ind, out var font) ? 
+            (font!.Target as Asset.Font)?.UVs ?? default : default;
     }
 
     public static IFontGlyph FontCacheGlyph(Handle<Asset.Font> ind, int glyphIndex)
     {
-        return FontManager.TryFindAsset(ind, out var font) ? font!.CacheGlyph(glyphIndex) : default(FontGlyph);
+        return Font.TryFindAsset(ind, out var font) ? 
+            (font!.Target as Asset.Font)?.CacheGlyph(glyphIndex) ?? default(FontGlyph) : default(FontGlyph);
     }
 
     public static Handle<Asset.Font> FontAdd(string name, int size, int first, int last)
@@ -51,9 +51,7 @@ public partial class GML
         
         resource.AddGlyphsFromString(range);
         
-        return (Handle<Asset.Font>)FontManager.Register(
-            new Asset.Font(
-                $"ExternalFont_{FontManager.Counter}", resource))!;
+        return Font.Register(name, new Asset.Font(resource))!;
     }
     
     public static Handle<Asset.Font> FontAdd(string name, int size, string range)
@@ -61,16 +59,14 @@ public partial class GML
         var resource = new ExpandoFont(name, size);
         resource.AddGlyphsFromString(range);
         
-        return (Handle<Asset.Font>)FontManager.Register(
-            new Asset.Font(
-                $"ExternalFont_{FontManager.Counter}", resource))!;
+        return Font.Register(name, new Asset.Font(resource))!;
     }
 
     public static void FontDelete(Handle<Asset.Font> ind)
     {
-        if (!FontManager.TryFindAsset(ind, out var font)) return;
-        font!.Dispose();
-        FontManager.Remove(ind);
+        if (!Font.TryFindAsset(ind, out var font)) return;
+        (font!.Target as Asset.Font)?.Dispose();
+        Font.Remove(ind);
     }
 
     public static int FontTexturePageSize
@@ -89,7 +85,6 @@ public partial class Asset
     /// <summary>
     /// 
     /// </summary>
-    [RegisterAssetType(AssetType.Font)]
     public sealed class Font : Asset, IHandleable<Font>, IFont, IDisposable
     {
         private readonly IFont Resource;
@@ -103,13 +98,13 @@ public partial class Asset
             Size = Resource.Size,
             SDFSpread = Resource.SDFSpread,
             Glyphs = Glyphs,
-            Name = Name,
+            Name = "",
             Texture = Texture
         };
         public Texture2D Texture => Resource.Texture;
         public IReadOnlyDictionary<int, IFontGlyph> Glyphs => Resource.Glyphs;
         
-        internal Font(string name, IFont font) : base(name)
+        internal Font(IFont font)
         {
             Resource = font;
         }
@@ -123,8 +118,8 @@ public partial class Asset
             }
             return default(FontGlyph);
         }
-        
-        public static Font ResolveHandle(Handle<Font> handle)
+
+        public static WeakReference ResolveHandle(Handle<Font> handle)
         {
             throw new NotImplementedException();
         }
