@@ -33,6 +33,11 @@ public class HandleManager<T> where T : class?, IHandleable<T>
         return Contents.ContainsKey(handle);
     }
     
+    public bool ContainsTarget(T handleable)
+    {
+        return Contents.ContainsValue(handleable);
+    }
+    
     public bool TryGetTarget(Handle<T> handle, out WeakReference<T>? target)
     {
         var ret = Contents.TryGetValue(handle, out var resource);
