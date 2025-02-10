@@ -4,7 +4,7 @@ namespace GMLib;
 
 public partial class GML
 {
-    public static AssetManager<Asset.Font> Font => AssetManager<Asset.Font>.Default;
+    public static AssetManager<Asset.Font> Font => Asset.GetManager<Asset.Font>();
     
     public static bool FontExists(Handle<Asset.Font> ind)
     {
@@ -157,5 +157,10 @@ partial class Asset
             DisposedValue = true;
         }
         #endregion
+
+        static Font()
+        {
+            AssetManager.Managers[typeof(Font)] = new AssetManager<Font>();
+        }
     }
 }

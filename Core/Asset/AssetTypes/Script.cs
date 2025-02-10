@@ -4,7 +4,7 @@ namespace GMLib;
 
 public partial class GML
 {
-    public static AssetManager<Asset.Script> Script => AssetManager<Asset.Script>.Default;
+    public static AssetManager<Asset.Script> Script => Asset.GetManager<Asset.Script>();
     
     public static bool ScriptExists(Handle<Asset.Script> handle) => Script.Contains(handle);
     
@@ -14,7 +14,7 @@ public partial class GML
     }
 }
 
-internal static class ScriptManagerExtension
+internal static class ScriptManagerExtensions
 {
     internal static string NextName(this AssetManager<Asset.Script> manager)
     {
@@ -63,6 +63,11 @@ partial class Asset
         {
             GML.Script.TryFindAsset(handle, out var asset);
             return asset;
+        }
+
+        static Script()
+        {
+            AssetManager.Managers[typeof(Script)] = new AssetManager<Script>();
         }
     }
 }

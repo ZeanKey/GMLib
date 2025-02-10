@@ -1,10 +1,10 @@
-namespace GMLib.GM.Variable;
+namespace GMLib.GM.Extensions;
 
 public static class Instance
 {
-    public static bool Exists(this Handle<IObject> instanceId, string name)
+    public static bool VariableExists(this Handle<IObject> instanceId, string name)
     {
-        if (GML.Object.TryFindObject(instanceId, out var reference))
+        if (GML.Instance.TryFindObject(instanceId, out var reference))
         {
             if (reference!.Target is GMLib.Instance instance)
             {
@@ -15,9 +15,9 @@ public static class Instance
         return false;
     }
     
-    public static string[] GetNames(this Handle<IObject> instanceId)
+    public static string[] GetVariableNames(this Handle<IObject> instanceId)
     {
-        if (GML.Object.TryFindObject(instanceId, out var reference))
+        if (GML.Instance.TryFindObject(instanceId, out var reference))
         {
             if (reference!.Target is GMLib.Instance instance)
             {
@@ -27,9 +27,9 @@ public static class Instance
         return [];
     }
 
-    public static int GetCount(this Handle<IObject> instanceId)
+    public static int GetVariableNamesCount(this Handle<IObject> instanceId)
     {
-        if (GML.Object.TryFindObject(instanceId, out var reference))
+        if (GML.Instance.TryFindObject(instanceId, out var reference))
         {
             if (reference!.Target is GMLib.Instance instance)
             {
@@ -39,9 +39,9 @@ public static class Instance
         return -1;
     }
 
-    public static object? Get(this Handle<IObject> instanceId, string name)
+    public static object? GetVariable(this Handle<IObject> instanceId, string name)
     {
-        if (GML.Object.TryFindObject(instanceId, out var reference))
+        if (GML.Instance.TryFindObject(instanceId, out var reference))
         {
             if (reference!.Target is GMLib.Instance instance)
             {
@@ -51,9 +51,9 @@ public static class Instance
         return null;
     }
 
-    public static void Set(this Handle<IObject> instanceId, string name, object? val)
+    public static void SetVariable(this Handle<IObject> instanceId, string name, object? val)
     {
-        if (!GML.Object.TryFindObject(instanceId, out var reference))
+        if (!GML.Instance.TryFindObject(instanceId, out var reference))
             return;
         if (reference!.Target is not GMLib.Instance instance) 
             return;

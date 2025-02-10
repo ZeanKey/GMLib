@@ -3,12 +3,12 @@ namespace GMLib;
 /// <summary>
 /// The base object of the template when construct user's own game object class.<br/>
 /// </summary>
-public class GameObject: Object
+public class GameObject: Object2D
 {
     /// <summary>
     /// 
     /// </summary>
-    public virtual void EventCreate()
+    public virtual void Create()
     {
         
     }
@@ -16,7 +16,7 @@ public class GameObject: Object
     /// <summary>
     /// 
     /// </summary>
-    public virtual void EventStep()
+    public virtual void Step()
     {
         
     }
@@ -24,7 +24,7 @@ public class GameObject: Object
     /// <summary>
     /// 
     /// </summary>
-    public virtual void EventDraw()
+    public virtual void Draw()
     {
         
     }
@@ -32,29 +32,19 @@ public class GameObject: Object
     /// <summary>
     /// 
     /// </summary>
-    public virtual void EventDrawGUI()
+    public virtual void DrawGUI()
     {
         
     }
     
-    public virtual void EventDestroy()
+    public virtual void CleanUp()
     {
         
     }
     
-    public virtual void EventCleanUp()
+    public virtual void Destroy()
     {
-        
-    }
-    
-    public override bool Exists()
-    {
-        return GML.Object.Contains(Id);
-    }
-    
-    public override bool Destroy()
-    {
-        return GML.Object.Remove(Id);
+
     }
 
     public override bool EventPerform(ObjectEventType type, params object?[] eventArgs)
@@ -62,19 +52,19 @@ public class GameObject: Object
         switch (type)
         {
             case ObjectEventType.Create:
-                EventCreate();
+                Create();
                 return true;
             case ObjectEventType.Step:
-                EventStep();
+                Step();
                 return true;
             case ObjectEventType.Draw:
-                EventDraw();
+                Draw();
                 return true;
             case ObjectEventType.Destroy:
-                EventDestroy();
+                Destroy();
                 return true;
             case ObjectEventType.CleanUp:
-                EventCleanUp();
+                CleanUp();
                 return true;
             default:
                 return false;

@@ -1,22 +1,24 @@
 namespace GMLib;
 
-public class ObjectManager : HandleManager<IObject>
+public class ObjectManager : HandleManager<IObject>, IObjectManager
 {
-    protected Dictionary<Handle<IObject>, IObject> MergedCollection
+    internal Dictionary<Handle<IObject>, IObject> MergedCollection
     {
         get
         {
             var collection = Contents
                 .ToDictionary(objectPair => objectPair.Key, objectPair => objectPair.Value);
-            foreach (var objectPair in SubManagers.SelectMany(subManager => subManager.Contents))
+            foreach (var objectPair in SubManagers.SelectMany(subManager => subManager.MergedCollection))
                 collection.Add(objectPair.Key, objectPair.Value);
             return collection;
         }
     }
+    Dictionary<Handle<IObject>, IObject> IObjectManager.MergedCollection => MergedCollection;
     
-    internal List<ObjectManager> SubManagers { get; } = [];
+    internal List<IObjectManager> SubManagers { get; } = [];
+    List<IObjectManager> IObjectManager.SubManagers => SubManagers;
     
-    public bool TryFindObject(Handle<IObject>? id, out WeakReference? inst)
+    public virtual bool TryFindObject(Handle<IObject>? id, out WeakReference? inst)
     {
         if (id is { } vid)
         {
@@ -32,7 +34,7 @@ public class ObjectManager : HandleManager<IObject>
         return false;
     }
     
-    public void EventPerform(ObjectEventType type, params object?[] eventArgs)
+    public virtual void EventPerform(ObjectEventType type, params object?[] eventArgs)
     {
         foreach (var inst in Contents.Values)
         {
@@ -42,7 +44,7 @@ public class ObjectManager : HandleManager<IObject>
             submanager.EventPerform(type, eventArgs);
     }
     
-    public Handle<IObject>? Add(IObject gMObject)
+    public virtual Handle<IObject>? Add(IObject gMObject)
     {
         if (Contents.ContainsValue(gMObject))
             return null;
@@ -50,7 +52,7 @@ public class ObjectManager : HandleManager<IObject>
         return Create(gMObject);
     }
     
-    public bool Remove(Handle<IObject>? id)
+    public virtual bool Remove(Handle<IObject>? id)
     {
         if (id is not { } vid)
             return false;
@@ -65,7 +67,7 @@ public class ObjectManager : HandleManager<IObject>
         return false;
     }
     
-    public bool Contains(Handle<IObject>? id)
+    public virtual bool Contains(Handle<IObject>? id)
     {
         if (id is not { } vid)
             return false;

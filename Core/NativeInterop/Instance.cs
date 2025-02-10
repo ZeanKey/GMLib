@@ -1,25 +1,25 @@
 ﻿using System.Dynamic;
 using System.Reflection;
-using GMLib.GM.Variable;
+using GMLib.GM.Extensions;
 
 namespace GMLib;
 
 partial class GML
 {
     public static bool VariableInstanceExists(Handle<IObject> instanceId, string name) 
-        => instanceId.Exists(name);
+        => instanceId.VariableExists(name);
 
     public static string[] VariableInstanceGetNames(Handle<IObject> instanceId) 
-        => instanceId.GetNames();
+        => instanceId.GetVariableNames();
 
     public static int VariableInstanceGetCount(Handle<IObject> instanceId) 
-        => instanceId.GetCount();
+        => instanceId.GetVariableNamesCount();
 
     public static object? VariableInstanceGet(Handle<IObject> instanceId, string name) 
-        => instanceId.Get(name);
+        => instanceId.GetVariable(name);
 
     public static void VariableInstanceSet(Handle<IObject> instanceId, string name, object? val) 
-        => instanceId.Set(name, val);
+        => instanceId.SetVariable(name, val);
 }
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
@@ -51,7 +51,7 @@ public class Instance : DynamicObject, IGameObject
 
     public Instance(Asset.Object objectAsset)
     {
-        Self = [];
+        Self = new Dictionary<string, object?>();
         ObjectIndex = objectAsset;
     }
     
@@ -63,7 +63,7 @@ public class Instance : DynamicObject, IGameObject
 
     public override bool TrySetMember(SetMemberBinder binder, object? value)
     {
-        if ((IDictionary<string, object?>?)Self is { } resource)
+        if (Self is { } resource)
         {
             resource[binder.Name] = value;
             return true;
@@ -78,7 +78,7 @@ public class Instance : DynamicObject, IGameObject
     public Handle<IObject>? Id { get; internal set; }
     
     [ReservedInstanceField("self")]
-    public Dictionary<string, object?>? Self { get; internal set; }
+    public Struct? Self { get; internal set; }
     
     [ReservedInstanceField("object_index")]
     public Asset.Object ObjectIndex { get; private set; }
@@ -96,7 +96,7 @@ public class Instance : DynamicObject, IGameObject
     public int Depth { get; set; }
     
     [ReservedInstanceField("layer")]
-    public Asset.Room.Layer Layer { get; set; }
+    public Asset.Room.Layer<Asset.Room.Element.Instance> Layer { get; set; }
 
     [ReservedInstanceField("alarm")] 
     public IGameObject.IndexedTimerAlarmManager Alarm { get; } = new();
@@ -107,7 +107,7 @@ public class Instance : DynamicObject, IGameObject
         get => -new Vector2(HSpeed, VSpeed).Angle();
         set
         {
-            var velo = Vector2Helper.FromAngle(-value) * MathF.Sqrt(MathF.Pow(HSpeed, 2) + MathF.Pow(VSpeed, 2));
+            var velo = Vector2Extensions.FromAngle(-value) * MathF.Sqrt(MathF.Pow(HSpeed, 2) + MathF.Pow(VSpeed, 2));
             HSpeed = velo.X;
             VSpeed = velo.Y;
         }
@@ -254,7 +254,7 @@ public class Instance : DynamicObject, IGameObject
     
     Vector2 IGameObject.Gravity
     {
-        get => Vector2Helper.FromAngle(-GravityDirection / 180f * MathF.PI) * Gravity;
+        get => Vector2Extensions.FromAngle(-GravityDirection / 180f * MathF.PI) * Gravity;
         set
         {
             Gravity = value.Length();
@@ -285,15 +285,15 @@ public class Instance : DynamicObject, IGameObject
     public bool Destroy()
     {
         Self = null;
-        return GML.Object.Remove(Id);
+        return GML.Instance.Remove(Id);
     }
 
     public bool Exists()
     {
-        return GML.Object.Contains(Id);
+        return GML.Instance.Contains(Id);
     }
 
-    public static implicit operator Handle<IObject>?(Instance instance)
+    public static explicit operator Handle<IObject>?(Instance instance)
     {
         return instance.Id;
     }

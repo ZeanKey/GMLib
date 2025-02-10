@@ -7,8 +7,6 @@ public class HandleManager<T> where T : class?, IHandleable<T>
 
     public int Counter => HandleIndexCounter;
     
-    public static readonly HandleManager<T> Default = new();
-    
     protected Handle<T> Next() => new(HandleIndexCounter ++);
     
     public Handle<T> Create(T handleable)

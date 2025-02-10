@@ -1,5 +1,5 @@
 using System.Numerics;
-using static GMLib.RaylibExtension;
+using static GMLib.RaylibExtensions;
 
 namespace GMLib;
 

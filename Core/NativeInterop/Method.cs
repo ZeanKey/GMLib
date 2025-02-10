@@ -5,29 +5,19 @@ namespace GMLib;
 partial class GML
 {
     public static Method Method(object structRefOrInstanceId, Asset.Script func)
-    {
-        return new Method(structRefOrInstanceId, func);
-    }
+        => new Method(structRefOrInstanceId, func);
     
     public static Method Method(object structRefOrInstanceId, Method func)
-    {
-        return new Method(structRefOrInstanceId, func);
-    }
+        => new Method(structRefOrInstanceId, func);
 
     public static object? MethodGetSelf(Method method)
-    {
-        return method.Self;
-    }
+        => GM.Method.GetSelf(method);
 
     public static Asset.Script.Function MethodGetIndex(Method method)
-    {
-        return method.Function;
-    }
+        => GM.Method.GetIndex(method);
 
     public static object? MethodCall(Method method, params object?[]? arrayArgs)
-    {
-        return method.Invoke(arrayArgs);
-    }
+        => GM.Method.Call(method, arrayArgs);
 }
 
 /// <summary>
@@ -35,35 +25,35 @@ partial class GML
 /// </summary>
 public sealed class Method : DynamicObject
 {
-    public object? Self;
+    public object? Context;
     public Asset.Script.Function Function;
 
-    public Method(object? self, Asset.Script.Function function)
+    public Method(object? context, Asset.Script.Function function)
     {
-        Self = self;
+        Context = context;
         Function = function;
     }
     
-    public Method(object? self, Asset.Script function)
+    public Method(object? context, Asset.Script function)
     {
-        Self = self;
+        Context = context;
         Function = function.Body;
     }
     
-    public Method(object? self, Method method)
+    public Method(object? context, Method method)
     {
-        Self = self;
+        Context = context;
         Function = method.Function;
     }
     
     public object? Invoke(params object?[]? args)
     {
-        return Function(Self, args);
+        return Function(Context, args);
     }
     
     public override bool TryInvoke(InvokeBinder binder, object?[]? args, out object? result)
     {
-        result = Function(Self, args);
+        result = Function(Context, args);
         return true;
     }
 }

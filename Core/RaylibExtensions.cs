@@ -3,12 +3,17 @@ using System.Numerics;
 
 namespace GMLib;
 
-public static unsafe class RaylibExtension
+public static unsafe class RaylibExtensions
 {
     const float Deg2Rad = MathF.PI / 180f;
 
     public static int TextLineSpacing { get; set; } = 2;
 
+    public static void DrawTextureInversed(RenderTexture2D target)
+    {
+        Raylib.DrawTextureRec(target.Texture, new Rectangle(0, 0, target.Texture.Width, -target.Texture.Height), new Vector2(0, -target.Texture.Height/2f), Color.White);
+    }
+    
     public static void DrawTextExExt(Font font, sbyte * text, Vector2 position, Vector2 scale, Vector2 orientation, float sep, float spacing, Color c1, Color c2, Color c3, Color c4)
     {
         if (font.Texture.Id == 0) font = Raylib.GetFontDefault();  // Security check in case of not valid font

@@ -2,11 +2,11 @@ using GMLib.GM;
 
 namespace GMLib;
 
-public interface IGameObject : IObject
+public interface IGameObject : IObject2D
 {
     public bool Solid { get; set; }
     
-    public Asset.Room.Layer Layer  { get; set; }
+    public Asset.Room.Layer<Asset.Room.Element.Instance> Layer { get; set; }
     
     public IndexedTimerAlarmManager Alarm { get; }
     
@@ -15,8 +15,6 @@ public interface IGameObject : IObject
     public Vector2 Velocity { get; set; }
     
     public Vector2 Gravity { get; set; }
-    
-    public Vector2 Position { get; set; }
     
     public Vector2 PositionStart { get; }
     

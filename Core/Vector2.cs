@@ -1,6 +1,6 @@
 namespace GMLib;
 
-public static class Vector2Helper
+public static class Vector2Extensions
 {
     public static float Angle(this Vector2 vector)
     {

@@ -4,7 +4,7 @@ public interface IObject : IHandleable<IObject>
 {
     static WeakReference? IHandleable<IObject>.ResolveHandle(Handle<IObject> handle)
     {
-        GML.Object.TryFindObject(handle, out var value);
+        GML.Instance.TryFindObject(handle, out var value);
         return value;
     }
 
@@ -15,10 +15,6 @@ public interface IObject : IHandleable<IObject>
     public bool Visible { get; set; }
     
     public bool Persistent { get; set; }
-    
-    public bool Exists();
-    
-    public bool Destroy();
     
     public bool EventPerform(ObjectEventType type, params object?[] eventArgs);
     

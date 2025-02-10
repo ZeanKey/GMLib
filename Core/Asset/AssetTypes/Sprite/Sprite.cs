@@ -1,10 +1,10 @@
-using static GMLib.RaylibExtension;
+using static GMLib.RaylibExtensions;
 
 namespace GMLib;
 
 partial class GML
 {
-    public static AssetManager<Asset.Sprite> Sprite => AssetManager<Asset.Sprite>.Default;
+    public static AssetManager<Asset.Sprite> Sprite => Asset.GetManager<Asset.Sprite>();
 
     internal static readonly SpriteTextureManager SpriteTexture = new();
 }
@@ -208,5 +208,10 @@ partial class Asset
             DisposedValue = true;
         }
         #endregion
+
+        static Sprite()
+        {
+            AssetManager.Managers[typeof(Sprite)] = new AssetManager<Sprite>();
+        }
     }
 }

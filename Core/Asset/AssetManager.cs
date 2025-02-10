@@ -1,15 +1,8 @@
 ﻿namespace GMLib;
 
-public sealed class AssetManager<TAsset> : HandleManager<TAsset>, IAssetManager where TAsset : Asset, IHandleable<TAsset>
+public class AssetManager<TAsset> : HandleManager<TAsset>, IAssetManager where TAsset : Asset, IHandleable<TAsset>
 {
     internal readonly Dictionary<string, Handle<TAsset>> Assets = [];
-    
-    public new static AssetManager<TAsset> Default { get; } = new();
-
-    static AssetManager()
-    {
-        AssetManager.Managers[typeof(TAsset)] = Default;
-    }
     
     public Handle<TAsset> Register(string name, TAsset asset)
     {
