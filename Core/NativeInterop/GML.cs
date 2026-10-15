@@ -1,11 +1,59 @@
-using System.Numerics;
-using Raylib_cs;
-using static Raylib_cs.Raylib;
-using static GMLib.RaylibExtensions;
-
 namespace GMLib.NativeInterop;
 
 public partial class GML;
+
+partial class GML
+{
+    public bool variable_instance_exists(Handle<IObject> instance_id, string name)
+    {
+        
+    }
+
+    public string[] variable_instance_get_names(Handle<IObject> instance_id)
+    {
+        
+    }
+
+    public float variable_instance_get_names_count(Handle<IObject> instance_id)
+    {
+        
+    }
+
+    public object? variable_instance_get(Handle<IObject> instance_id, string name)
+    {
+        
+    }
+
+    public void variable_instance_set(Handle<IObject> instance_id, string name, object val)
+    {
+        
+    }
+
+    public bool variable_global_exists(string name)
+    {
+        
+    }
+
+    public object? variable_global_get(string name)
+    {
+        
+    }
+
+    public void variable_global_set(string name, object val)
+    {
+        
+    }
+
+    public string nameof(object name)
+    {
+        
+    }
+
+    public Method method(object struct_ref_or_instance_id, object func)
+    {
+        
+    }
+}
 
 partial class GML
 {
